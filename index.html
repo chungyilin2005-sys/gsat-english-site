@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>學測英文自學站｜單字與文法</title>
+<meta name="description" content="學測英文 A 級必背 244 字、B 級重要 1032 字互動學習，以及文法專題測驗。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F6F7F9; --sheet:#FFFFFF; --ink:#1C2433; --muted:#5B6474; --line:#D9DDE3;
+  --blue:#2563EB; --blue-soft:#DBEAFE; --red:#C8324A; --red-soft:#F7DDE2;
+  --sans:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;
+  --serif:"Source Serif 4","Times New Roman",Georgia,serif;
+  color-scheme:light; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#15181D; --sheet:#1D2128; --ink:#E7EAF0; --muted:#A0A8B6; --line:#343A44;
+  --blue:#7AA7FF; --blue-soft:#1E2A44; --red:#FF7D90; --red-soft:#3A2128; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --paper:#15181D; --sheet:#1D2128; --ink:#E7EAF0; --muted:#A0A8B6; --line:#343A44;
+  --blue:#7AA7FF; --blue-soft:#1E2A44; --red:#FF7D90; --red-soft:#3A2128; color-scheme:dark;}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:46rem;margin:0 auto;padding:3.5rem 1.25rem 3rem}
+header h1{font-size:clamp(1.9rem,5vw,2.6rem);line-height:1.25;margin:0 0 .9rem;font-weight:700;letter-spacing:.02em}
+header p{margin:0;color:var(--muted);max-width:34rem}
+.motto{font-family:var(--serif);font-style:italic;font-size:1.05rem;color:var(--muted);margin:0 0 1.25rem}
+.list{margin:2.75rem 0 0;padding:0;list-style:none;display:grid;gap:1rem}
+.entry{display:grid;grid-template-columns:5.5rem 1fr;background:var(--sheet);border:1px solid var(--line);border-radius:6px;
+  text-decoration:none;color:inherit;overflow:hidden;transition:border-color .15s, transform .15s}
+.entry:hover{border-color:var(--accent)}
+.entry:active{transform:translateY(1px)}
+.entry:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.mark{display:flex;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent);
+  font-family:var(--serif);font-weight:600;font-size:2.6rem;line-height:1}
+.body{padding:1.1rem 1.25rem 1.2rem}
+.body h2{margin:0 0 .25rem;font-size:1.15rem;font-weight:700}
+.body p{margin:0;color:var(--muted);font-size:.95rem}
+.go{display:inline-block;margin-top:.6rem;font-size:.9rem;font-weight:500;color:var(--accent)}
+.vocab{--accent:var(--blue);--accent-soft:var(--blue-soft)}
+.grammar{--accent:var(--red);--accent-soft:var(--red-soft)}
+.note{margin-top:2.5rem;padding-top:1.25rem;border-top:1px solid var(--line);color:var(--muted);font-size:.9rem}
+.note p{margin:0 0 .5rem}
+@media (max-width:480px){.entry{grid-template-columns:4.25rem 1fr}.mark{font-size:2.1rem}.wrap{padding-top:2.5rem}}
+@media (prefers-reduced-motion:reduce){.entry{transition:none}.entry:active{transform:none}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <p class="motto">Learn the words first, then the rules.</p>
+    <h1>學測英文自學站</h1>
+    <p>整理自歷屆學測試題的高頻單字與文法重點。建議先把 A 級單字背熟，再擴充到 B 級，最後用文法測驗檢查觀念。</p>
+  </header>
+
+  <ul class="list">
+    <li><a class="entry vocab" href="vocab-a.html">
+      <span class="mark" aria-hidden="true">A</span>
+      <span class="body">
+        <h2>A 級必背單字（244 字）</h2>
+        <p>歷屆試題中最常出現的單字，學測一定要會的基本盤。</p>
+        <span class="go">開始背 A 級單字</span>
+      </span>
+    </a></li>
+    <li><a class="entry vocab" href="vocab-b.html">
+      <span class="mark" aria-hidden="true">B</span>
+      <span class="body">
+        <h2>B 級重要單字（1032 字）</h2>
+        <p>A 級熟了之後的進階範圍，用來拉開分數差距。</p>
+        <span class="go">開始背 B 級單字</span>
+      </span>
+    </a></li>
+    <li><a class="entry grammar" href="grammar.html">
+      <span class="mark" aria-hidden="true">G</span>
+      <span class="body">
+        <h2>文法專題測驗</h2>
+        <p>依主題分類的文法題目，作答後立即看到解析。</p>
+        <span class="go">開始做文法測驗</span>
+      </span>
+    </a></li>
+  </ul>
+
+  <footer class="note">
+    <p>學習進度會存在你目前使用的瀏覽器裡。換一支手機、換一台電腦或清除瀏覽紀錄，進度不會跟著過去。</p>
+    <p>手機使用者可以把這一頁「加入主畫面」，下次打開就像 App 一樣方便。</p>
+  </footer>
+</main>
+</body>
+</html>
