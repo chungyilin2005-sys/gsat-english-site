@@ -558,6 +558,62 @@
     box-shadow: var(--shadow);
     position: relative;
   }
+  /* ===== Print module ===== */
+  .pr-options { display:flex; flex-wrap:wrap; gap:8px; }
+  .pr-chip { display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border:1px solid var(--border); border-radius:999px; background:var(--bg); cursor:pointer; font-size:0.88rem; }
+  .pr-chip input { accent-color: var(--primary); }
+  .pr-chip:has(input:checked) { border-color: var(--primary); background: var(--primary-light); font-weight:600; }
+  .pr-sub { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px; }
+  .pr-sub .filter-input, .pr-sub .filter-select { width:auto; }
+  .pr-summary { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin:4px 0 16px; }
+  .pr-summary strong { font-size:1.05rem; }
+  .pr-tips { font-size:0.85rem; color:var(--text-muted); line-height:1.7; margin-top:10px; }
+  .pr-tips b { color:var(--text); }
+  .pr-preview { background:var(--surface-hover); border:1px solid var(--border); border-radius:var(--radius); padding:16px; overflow:hidden; }
+  .pr-preview .pr-sheet { box-shadow:0 2px 10px rgba(0,0,0,.18); margin:0 auto 16px; }
+  .pr-empty { text-align:center; padding:40px 16px; color:var(--text-muted); }
+  .pr-more { text-align:center; color:var(--text-muted); font-size:0.88rem; }
+  /* the paper itself: always black on white, sized in mm */
+  .pr-sheet { width:210mm; height:296mm; padding:10mm; background:#fff; color:#111; overflow:hidden; position:relative;
+    font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif; }
+  .pr-foot { position:absolute; left:10mm; right:10mm; bottom:4mm; font-size:7.5pt; color:#777; display:flex; justify-content:space-between; }
+  /* fold cards: 2 x 4 per page, each 95 x 69 mm, folds into 47.5 x 69 mm */
+  .pr-cards { display:grid; grid-template-columns:repeat(2,95mm); grid-auto-rows:69mm; border-top:0.25mm dashed #999; border-left:0.25mm dashed #999; width:190mm; }
+  .pr-card { display:grid; grid-template-columns:1fr 1fr; border-right:0.25mm dashed #999; border-bottom:0.25mm dashed #999; position:relative; }
+  .pr-card::after { content:""; position:absolute; top:4mm; bottom:4mm; left:50%; border-left:0.25mm dotted #bbb; }
+  .pr-half { padding:5mm 4mm; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; overflow:hidden; position:relative; }
+  .pr-word { font-family:Georgia,"Times New Roman",serif; font-weight:700; line-height:1.15; word-break:break-word; color:#000; }
+  .pr-pos { font-family:Georgia,"Times New Roman",serif; font-style:italic; font-size:10pt; margin-top:2.5mm; color:#333; }
+  .pr-zh { font-size:14pt; font-weight:700; line-height:1.35; color:#000; }
+  .pr-fam { font-size:8pt; line-height:1.4; margin-top:3mm; color:#444; font-family:Georgia,"Times New Roman","Noto Sans TC",serif; }
+  .pr-tag { position:absolute; bottom:2.5mm; font-size:6.5pt; color:#888; letter-spacing:.02em; }
+  .pr-mark { position:absolute; top:2.5mm; right:3mm; font-size:7pt; color:#888; }
+  /* self-test list */
+  .pr-list { width:100%; border-collapse:collapse; font-size:10pt; }
+  .pr-list th { font-size:8pt; color:#555; font-weight:600; text-align:left; padding:0 2mm 1.5mm; border-bottom:0.4mm solid #333; }
+  .pr-list td { height:7.15mm; padding:0 2mm; border-bottom:0.2mm solid #ccc; vertical-align:middle; }
+  .pr-list .c-no { width:10mm; color:#888; font-size:8pt; }
+  .pr-list .c-word { width:46mm; font-family:Georgia,"Times New Roman",serif; font-weight:700; font-size:11pt; }
+  .pr-list .c-pos { width:16mm; font-family:Georgia,"Times New Roman",serif; font-style:italic; font-size:9pt; color:#444; border-right:0.35mm dashed #888; }
+  .pr-list .c-zh { padding-left:5mm; }
+  .pr-list .c-chk { width:9mm; text-align:center; color:#999; }
+  .pr-list .blank { color:transparent; }
+  .pr-list-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:3mm; }
+  .pr-list-head h3 { font-size:12pt; margin:0; }
+  .pr-list-head span { font-size:8pt; color:#666; }
+  .pr-list th, .pr-list td, .pr-list tr { background:#fff !important; color:#111; }
+  .pr-list .c-no, .pr-list .c-chk { color:#888; }
+  .pr-list .blank { color:transparent !important; }
+  #printRoot { display:none; }
+  @media print {
+    @page { size:A4 portrait; margin:0; }
+    html.pr-printing body { padding:0 !important; background:#fff !important; }
+    html.pr-printing body > *:not(#printRoot) { display:none !important; }
+    html.pr-printing #printRoot { display:block; }
+    #printRoot .pr-sheet { break-after:page; page-break-after:always; box-shadow:none; margin:0; }
+    #printRoot .pr-sheet:last-child { break-after:auto; page-break-after:auto; }
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
 </style>
 </head>
 <body>
@@ -576,6 +632,8 @@
       <span class="stat-pill learning" id="statLearning">📌 待加強：0</span>
       <button class="btn" onclick="toggleTheme()" id="themeBtn">🌙 深色模式</button>
       <button class="btn" onclick="exportProgress()">💾 匯出進度</button>
+      <button class="btn" onclick="document.getElementById('importFile').click()">📂 匯入進度</button>
+      <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importProgress(this)">
       <button class="btn" onclick="resetProgress()">🔄 重置</button>
     </div>
   </div>
@@ -587,6 +645,7 @@
   <button class="tab-btn" onclick="switchTab('quiz', this)">✍️ 歷屆真題與詞義測驗</button>
   <button class="tab-btn" onclick="switchTab('schedule', this)">📅 12 週背誦進度計畫</button>
   <button class="tab-btn" onclick="switchTab('analytics', this)">📊 考頻數據分析室</button>
+  <button class="tab-btn" onclick="switchTab('print', this); prRender()">🖨️ 列印字卡</button>
 </nav>
 
 <main>
@@ -767,7 +826,49 @@
     </div>
     <div class="analytics-grid" id="analyticsGrid"></div>
   </section>
+  <!-- TAB: PRINT -->
+  <section id="tab-print" class="tab-panel">
+    <div class="panel-card" style="margin-bottom:16px">
+      <div class="filter-group" style="margin-bottom:14px">
+        <label>要印哪些字</label>
+        <div class="pr-options">
+          <label class="pr-chip"><input type="radio" name="prRange" value="week" checked onchange="prRender()"> 依週次</label>
+          <label class="pr-chip"><input type="radio" name="prRange" value="learning" onchange="prRender()"> 只印「待加強」</label>
+          <label class="pr-chip"><input type="radio" name="prRange" value="rank" onchange="prRender()"> 依排名區間</label>
+        </div>
+        <div class="pr-sub" id="prSubWeek">
+          第 <select id="prWeek" class="filter-select" onchange="prRender()"></select> 週
+        </div>
+        <div class="pr-sub" id="prSubRank" style="display:none">
+          第 <input type="number" id="prFrom" class="filter-input" min="1" value="1" style="width:5.5em" oninput="prRender()">
+          到 <input type="number" id="prTo" class="filter-input" min="1" value="40" style="width:5.5em" oninput="prRender()"> 名
+        </div>
+        <label class="pr-chip" id="prSkipWrap" style="margin-top:8px;align-self:flex-start"><input type="checkbox" id="prSkipMastered" onchange="prRender()"> 跳過已標「已熟記」的字</label>
+      </div>
+      <div class="filter-group">
+        <label>印成什麼</label>
+        <div class="pr-options">
+          <label class="pr-chip"><input type="radio" name="prFormat" value="cards" checked onchange="prRender()"> 對折字卡（每頁 8 張）</label>
+          <label class="pr-chip"><input type="radio" name="prFormat" value="list" onchange="prRender()"> 自我測驗單字表（每頁 36 字）</label>
+        </div>
+        <div class="pr-sub" id="prSubList" style="display:none">
+          中文欄：
+          <select id="prListMode" class="filter-select" onchange="prRender()">
+            <option value="full">印出中文（對折遮住自我測驗）</option>
+            <option value="blank">留白（自己寫中文，再回網頁對答案）</option>
+          </select>
+        </div>
+      </div>
+      <p class="pr-tips" id="prTips"></p>
+    </div>
+    <div class="pr-summary">
+      <strong id="prCount"></strong>
+      <button class="btn btn-primary" id="prPrintBtn" onclick="prPrint()">🖨️ 列印</button>
+    </div>
+    <div class="pr-preview" id="prPreview"></div>
+  </section>
 </main>
+<div id="printRoot"></div>
 
 <!-- WORD DETAIL MODAL -->
 <div class="modal-backdrop" id="wordModal" onclick="if(event.target===this)closeModal()">
@@ -1394,6 +1495,163 @@ function exportProgress() {
   a.download = "學測A級244單字_學習進度備份.json";
   a.click();
 }
+
+function importProgress(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try { data = JSON.parse(reader.result); }
+    catch (err) { alert('匯入失敗：這個檔案不是有效的進度備份（JSON 格式錯誤）。'); return; }
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      alert('匯入失敗：檔案內容不是單字進度紀錄。'); return;
+    }
+    const valid = new Set(WORDS.map(w => w.word));
+    const clean = {};
+    let m = 0, l = 0, skipped = 0;
+    for (const [k, v] of Object.entries(data)) {
+      if (valid.has(k) && (v === 'mastered' || v === 'learning')) {
+        clean[k] = v; v === 'mastered' ? m++ : l++;
+      } else skipped++;
+    }
+    if (m + l === 0) {
+      alert('匯入失敗：檔案裡沒有本頁（A 級）的單字紀錄。請確認選的是「A 級」的備份檔，不是另一級的。'); return;
+    }
+    const msg = '備份檔內有：已熟記 ' + m + ' 字、待加強 ' + l + ' 字' +
+      (skipped ? '（另有 ' + skipped + ' 筆不屬於本頁，將略過）' : '') +
+      '。\n\n匯入後會取代目前這台裝置上的標記紀錄，確定要匯入嗎？';
+    if (!confirm(msg)) return;
+    userStatus = clean;
+    saveStatus();
+    renderExplorer();
+    renderSchedule();
+    renderFlashcard();
+    alert('匯入完成：已熟記 ' + m + ' 字、待加強 ' + l + ' 字。');
+  };
+  reader.onerror = () => alert('匯入失敗：無法讀取這個檔案。');
+  reader.readAsText(file, 'utf-8');
+}
+
+/* ===== Print module ===== */
+const PR = { level: 'A 級', code: 'A', weeks: 12 };
+const PR_PER = { cards: 8, list: 36 };
+function prEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function prOpt(name) { const el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : null; }
+function prInit() {
+  const sel = document.getElementById('prWeek');
+  if (!sel || sel.options.length) return;
+  for (let w = 1; w <= PR.weeks; w++) {
+    const n = WORDS.filter(x => x.week === w).length;
+    sel.insertAdjacentHTML('beforeend', '<option value="' + w + '">' + w + '（' + n + ' 字）</option>');
+  }
+  document.getElementById('prTo').max = WORDS.length;
+  document.getElementById('prFrom').max = WORDS.length;
+}
+function prSelected() {
+  const range = prOpt('prRange');
+  let list;
+  if (range === 'week') {
+    const w = +document.getElementById('prWeek').value || 1;
+    list = WORDS.filter(x => x.week === w);
+  } else if (range === 'learning') {
+    list = WORDS.filter(x => userStatus[x.word] === 'learning');
+  } else {
+    let a = parseInt(document.getElementById('prFrom').value, 10) || 1;
+    let b = parseInt(document.getElementById('prTo').value, 10) || a;
+    if (a > b) [a, b] = [b, a];
+    list = WORDS.filter(x => x.rank >= a && x.rank <= b);
+  }
+  if (range !== 'learning' && document.getElementById('prSkipMastered').checked) {
+    list = list.filter(x => userStatus[x.word] !== 'mastered');
+  }
+  return list.slice().sort((p, q) => p.rank - q.rank);
+}
+function prWordSize(w) {
+  const n = w.length;
+  return n <= 7 ? 24 : n <= 9 ? 21 : n <= 11 ? 18 : n <= 13 ? 15.5 : 13.5;
+}
+function prCard(x) {
+  const tag = PR.code + '・第' + x.week + '週・#' + String(x.rank).padStart(4, '0');
+  const mark = userStatus[x.word] === 'learning' ? '<span class="pr-mark">待加強</span>' : '';
+  const fam = x.family ? '<div class="pr-fam">' + prEsc(x.family).replace(/＊/g, '') + '</div>' : '';
+  return '<div class="pr-card">' +
+    '<div class="pr-half"><div class="pr-word" style="font-size:' + prWordSize(x.word) + 'pt">' + prEsc(x.word) + '</div>' +
+      '<div class="pr-pos">' + prEsc(x.pos) + '　Lv.' + prEsc(x.level) + '</div><span class="pr-tag">' + tag + '</span></div>' +
+    '<div class="pr-half">' + mark + '<div class="pr-zh"' + (x.zh.length > 6 ? ' style="font-size:' + (x.zh.length > 10 ? 10.5 : 12) + 'pt"' : '') + '>' + prEsc(x.zh) + '</div>' + fam + '</div>' +
+  '</div>';
+}
+function prSheets(list, fmt) {
+  const per = PR_PER[fmt], pages = [], total = Math.ceil(list.length / per);
+  const blank = document.getElementById('prListMode').value === 'blank';
+  const title = '學測英文 ' + PR.level + ' 單字';
+  for (let i = 0; i < total; i++) {
+    const chunk = list.slice(i * per, i * per + per);
+    let body;
+    if (fmt === 'cards') {
+      body = '<div class="pr-cards">' + chunk.map(prCard).join('') + '</div>';
+    } else {
+      body = '<div class="pr-list-head"><h3>' + title + '　自我測驗單字表</h3><span>' + (blank ? '在中文欄寫下意思，寫完回網頁對答案；答對的打勾' : '沿虛線往後折，遮住中文後自我測驗；會的打勾') + '</span></div>' +
+        '<table class="pr-list"><thead><tr><th class="c-no">排名</th><th class="c-word">單字</th><th class="c-pos">詞性</th><th class="c-zh">中文</th><th class="c-chk">✓</th></tr></thead><tbody>' +
+        chunk.map(x => '<tr><td class="c-no">' + x.rank + '</td><td class="c-word">' + prEsc(x.word) + '</td><td class="c-pos">' + prEsc(x.pos) + '</td>' +
+          '<td class="c-zh' + (blank ? ' blank' : '') + '">' + prEsc(x.zh) + '</td><td class="c-chk">□</td></tr>').join('') +
+        '</tbody></table>';
+    }
+    pages.push('<div class="pr-sheet">' + body + '<div class="pr-foot"><span>' + title + '</span><span>' + (i + 1) + ' / ' + total + '</span></div></div>');
+  }
+  return pages;
+}
+function prFit() {
+  const box = document.getElementById('prPreview');
+  if (!box) return;
+  const avail = box.clientWidth - 32, paper = 210 * 96 / 25.4;
+  const z = Math.min(1, avail / paper);
+  box.querySelectorAll('.pr-sheet').forEach(s => { s.style.zoom = z; });
+}
+function prRender() {
+  prInit();
+  const range = prOpt('prRange'), fmt = prOpt('prFormat');
+  document.getElementById('prSubWeek').style.display = range === 'week' ? '' : 'none';
+  document.getElementById('prSubRank').style.display = range === 'rank' ? '' : 'none';
+  document.getElementById('prSkipWrap').style.display = range === 'learning' ? 'none' : '';
+  document.getElementById('prSubList').style.display = fmt === 'list' ? '' : 'none';
+  document.getElementById('prTips').innerHTML = (fmt === 'cards'
+      ? '<b>怎麼用：</b>單面列印，沿外圍虛線剪下，再沿中間點線對折，一面英文、一面中文。卡片角落有「級別・週次・排名」，散掉時可以照號碼排回去。'
+      : '<b>怎麼用：</b>沿詞性右側的虛線把紙往後折，就能遮住中文自我測驗。會的字在右邊打勾，沒打勾的回網頁標成「待加強」。') +
+    '<br><b>列印設定：</b>縮放請選「實際大小」或「100%」，不要選「符合頁面大小」，否則卡片尺寸會跑掉。建議用電腦列印；想先存檔，可在列印視窗的目的地選「另存為 PDF」。';
+  const list = prSelected(), box = document.getElementById('prPreview'), btn = document.getElementById('prPrintBtn');
+  if (!list.length) {
+    document.getElementById('prCount').textContent = '目前沒有符合條件的字';
+    box.innerHTML = '<div class="pr-empty">' + (range === 'learning'
+      ? '還沒有標記「待加強」的字。到「單字探索總覽」或「翻轉單字卡」把不熟的字標成 📌 待加強，再回來列印。'
+      : '這個範圍沒有字，請調整條件。') + '</div>';
+    btn.disabled = true; btn.style.opacity = .5; return;
+  }
+  btn.disabled = false; btn.style.opacity = '';
+  const pages = prSheets(list, fmt);
+  document.getElementById('prCount').textContent = '共 ' + list.length + ' 字，需要 ' + pages.length + ' 張 A4（單面）';
+  const show = 2;
+  box.innerHTML = pages.slice(0, show).join('') + (pages.length > show ? '<p class="pr-more">預覽只顯示前 ' + show + ' 頁，列印時會印出全部 ' + pages.length + ' 頁。</p>' : '');
+  prFit();
+}
+function prFill() {
+  const list = prSelected();
+  if (!list.length) return false;
+  document.getElementById('printRoot').innerHTML = prSheets(list, prOpt('prFormat')).join('');
+  document.documentElement.classList.add('pr-printing');
+  return true;
+}
+function prPrint() { if (prFill()) window.print(); }
+window.addEventListener('beforeprint', () => {
+  const tab = document.getElementById('tab-print');
+  if (tab && tab.classList.contains('active') && !document.documentElement.classList.contains('pr-printing')) prFill();
+});
+window.addEventListener('afterprint', () => {
+  document.documentElement.classList.remove('pr-printing');
+  document.getElementById('printRoot').innerHTML = '';
+});
+window.addEventListener('resize', prFit);
 
 function resetProgress() {
   if (confirm('確定要清空所有「已熟記／待加強」標記紀錄嗎？')) {
