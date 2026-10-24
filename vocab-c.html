@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>學測英文 C 級補強單字互動學習系統 v1.0</title>
+<style>
+  :root {
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --surface-hover: #f1f5f9;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --primary: #2563eb;
+    --primary-light: #dbeafe;
+    --primary-dark: #1d4ed8;
+    --success: #10b981;
+    --success-light: #d1fae5;
+    --warning: #f59e0b;
+    --warning-light: #fef3c7;
+    --danger: #ef4444;
+    --danger-light: #fee2e2;
+    --border: #e2e8f0;
+    --shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+    --radius: 12px;
+  }
+  [data-theme="dark"] {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface-hover: #334155;
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --primary: #3b82f6;
+    --primary-light: #1e3a8a;
+    --primary-dark: #60a5fa;
+    --success: #10b981;
+    --success-light: #064e3b;
+    --warning: #f59e0b;
+    --warning-light: #78350f;
+    --danger: #ef4444;
+    --danger-light: #7f1d1d;
+    --border: #334155;
+    --shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding-bottom: 60px;
+    transition: background 0.2s, color 0.2s;
+  }
+  /* Header */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 12px 20px;
+  }
+  .header-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+  .version-badge {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+  .header-stats {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .stat-pill {
+    font-size: 0.85rem;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    font-weight: 600;
+  }
+  .stat-pill.mastered { color: var(--success); }
+  .stat-pill.learning { color: var(--warning); }
+  .btn {
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .btn:hover { background: var(--surface-hover); }
+  .btn-primary {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+  .btn-primary:hover { background: var(--primary-dark); }
+  /* Navigation Tabs */
+  .nav-tabs {
+    max-width: 1280px;
+    margin: 16px auto 0;
+    padding: 0 20px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-muted);
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+  /* Main Container */
+  main {
+    max-width: 1280px;
+    margin: 20px auto;
+    padding: 0 20px;
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Filter Bar */
+  .filter-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .filter-group label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .filter-input, .filter-select {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+  .toolbar-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .toolbar-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn.active-toggle {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+    font-weight: 600;
+  }
+
+  /* Word Grid */
+  .word-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 16px;
+  }
+  .word-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.15s, border-color 0.15s;
+  }
+  .word-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+  }
+  .word-card.status-mastered { border-left: 5px solid var(--success); }
+  .word-card.status-learning { border-left: 5px solid var(--warning); }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .badges-left, .badges-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    background: var(--surface-hover);
+    color: var(--text-muted);
+  }
+  .badge.rank { background: var(--primary-light); color: var(--primary); }
+  .badge.lvl-3 { background: #dcfce7; color: #166534; }
+  .badge.lvl-4 { background: #dbeafe; color: #1e40af; }
+  .badge.lvl-5 { background: #fef3c7; color: #92400e; }
+  .badge.lvl-6 { background: #fce7f3; color: #9d174d; }
+  .badge.lvl-0 { background: #e5e7eb; color: #374151; }
+  .hl { color: var(--primary); font-weight: 700; }
+  .sentence-zh { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+  .badge.score { background: #f3e8ff; color: #6b21a8; }
+
+  .word-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .word-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: 0.3px;
+  }
+  .word-pos {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+  .audio-links {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .btn-xs {
+    padding: 3px 8px;
+    font-size: 0.75rem;
+    border-radius: 6px;
+  }
+  .word-zh {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .masked-text {
+    filter: blur(6px);
+    user-select: none;
+    cursor: pointer;
+    transition: filter 0.2s;
+  }
+  .masked-text:hover, .masked-text.revealed {
+    filter: none;
+  }
+  .word-family {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    background: var(--bg);
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  .freq-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    text-align: center;
+    background: var(--bg);
+    padding: 6px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+  }
+  .freq-item span {
+    display: block;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text);
+  }
+  .freq-item.highlight span { color: var(--danger); }
+  .sentence-box {
+    background: var(--surface-hover);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    border-left: 3px solid var(--primary);
+  }
+  .sources-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 6px;
+  }
+  .card-actions .btn { flex: 1; justify-content: center; }
+  .btn-mastered.active { background: var(--success); color: #fff; border-color: var(--success); }
+  .btn-learning.active { background: var(--warning); color: #fff; border-color: var(--warning); }
+
+  /* Compact Table View */
+  .table-wrap {
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+  th, td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+  th {
+    background: var(--surface-hover);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  tr:hover { background: var(--surface-hover); }
+
+  /* Flashcard Mode */
+  .fc-container {
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .fc-stage {
+    perspective: 1200px;
+    height: 380px;
+    cursor: pointer;
+  }
+  .fc-card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .fc-card.flipped { transform: rotateY(180deg); }
+  .fc-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+  }
+  .fc-back {
+    transform: rotateY(180deg);
+    justify-content: flex-start;
+    overflow-y: auto;
+    text-align: left;
+    align-items: stretch;
+  }
+  .fc-word { font-size: 2.6rem; font-weight: 800; }
+  .fc-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* Quiz Mode */
+  .quiz-box {
+    max-width: 760px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+  }
+  .quiz-question {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 16px 0;
+    padding: 16px;
+    background: var(--bg);
+    border-radius: 10px;
+  }
+  .quiz-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 600px) { .quiz-options { grid-template-columns: 1fr; } }
+  .quiz-opt {
+    padding: 14px 16px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .quiz-opt:hover:not(:disabled) { border-color: var(--primary); background: var(--surface-hover); }
+  .quiz-opt.correct { border-color: var(--success); background: var(--success-light); }
+  .quiz-opt.wrong { border-color: var(--danger); background: var(--danger-light); }
+
+  /* 12-Week Schedule */
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 16px;
+  }
+  .week-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .progress-track {
+    height: 8px;
+    background: var(--bg);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--success);
+    transition: width 0.3s;
+  }
+  .chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .word-chip {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .word-chip.mastered { background: var(--success-light); border-color: var(--success); }
+  .word-chip.learning { background: var(--warning-light); border-color: var(--warning); }
+
+  /* Analytics */
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 16px;
+  }
+  .panel-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: var(--shadow);
+  }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0;
+    font-size: 0.85rem;
+  }
+  .bar-label { width: 100px; font-weight: 600; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 12px; background: var(--bg); border-radius: 999px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--primary); border-radius: 999px; }
+  .bar-val { width: 70px; text-align: right; color: var(--text-muted); font-size: 0.8rem; }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal-content {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    max-width: 580px;
+    width: 100%;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+  /* ===== Print module ===== */
+  .pr-options { display:flex; flex-wrap:wrap; gap:8px; }
+  .pr-chip { display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border:1px solid var(--border); border-radius:999px; background:var(--bg); cursor:pointer; font-size:0.88rem; }
+  .pr-chip input { accent-color: var(--primary); }
+  .pr-chip:has(input:checked) { border-color: var(--primary); background: var(--primary-light); font-weight:600; }
+  .pr-sub { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px; }
+  .pr-sub .filter-input, .pr-sub .filter-select { width:auto; }
+  .pr-summary { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin:4px 0 16px; }
+  .pr-summary strong { font-size:1.05rem; }
+  .pr-tips { font-size:0.85rem; color:var(--text-muted); line-height:1.7; margin-top:10px; }
+  .pr-tips b { color:var(--text); }
+  .pr-preview { background:var(--surface-hover); border:1px solid var(--border); border-radius:var(--radius); padding:16px; overflow:hidden; }
+  .pr-preview .pr-sheet { box-shadow:0 2px 10px rgba(0,0,0,.18); margin:0 auto 16px; }
+  .pr-empty { text-align:center; padding:40px 16px; color:var(--text-muted); }
+  .pr-more { text-align:center; color:var(--text-muted); font-size:0.88rem; }
+  /* the paper itself: always black on white, sized in mm */
+  .pr-sheet { width:210mm; height:296mm; padding:10mm; background:#fff; color:#111; overflow:hidden; position:relative;
+    font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif; }
+  .pr-foot { position:absolute; left:10mm; right:10mm; bottom:4mm; font-size:7.5pt; color:#777; display:flex; justify-content:space-between; }
+  /* fold cards: 2 x 4 per page, each 95 x 69 mm, folds into 47.5 x 69 mm */
+  .pr-cards { display:grid; grid-template-columns:repeat(2,95mm); grid-auto-rows:69mm; border-top:0.25mm dashed #999; border-left:0.25mm dashed #999; width:190mm; }
+  .pr-card { display:grid; grid-template-columns:1fr 1fr; border-right:0.25mm dashed #999; border-bottom:0.25mm dashed #999; position:relative; }
+  .pr-card::after { content:""; position:absolute; top:4mm; bottom:4mm; left:50%; border-left:0.25mm dotted #bbb; }
+  .pr-half { padding:5mm 4mm; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; overflow:hidden; position:relative; }
+  .pr-word { font-family:Georgia,"Times New Roman",serif; font-weight:700; line-height:1.15; word-break:break-word; color:#000; }
+  .pr-pos { font-family:Georgia,"Times New Roman",serif; font-style:italic; font-size:10pt; margin-top:2.5mm; color:#333; }
+  .pr-zh { font-size:14pt; font-weight:700; line-height:1.35; color:#000; }
+  .pr-fam { font-size:8pt; line-height:1.4; margin-top:3mm; color:#444; font-family:Georgia,"Times New Roman","Noto Sans TC",serif; }
+  .pr-tag { position:absolute; bottom:2.5mm; font-size:6.5pt; color:#888; letter-spacing:.02em; }
+  .pr-mark { position:absolute; top:2.5mm; right:3mm; font-size:7pt; color:#888; }
+  /* self-test list */
+  .pr-list { width:100%; border-collapse:collapse; font-size:10pt; }
+  .pr-list th { font-size:8pt; color:#555; font-weight:600; text-align:left; padding:0 2mm 1.5mm; border-bottom:0.4mm solid #333; }
+  .pr-list td { height:7.15mm; padding:0 2mm; border-bottom:0.2mm solid #ccc; vertical-align:middle; }
+  .pr-list .c-no { width:10mm; color:#888; font-size:8pt; }
+  .pr-list .c-word { width:46mm; font-family:Georgia,"Times New Roman",serif; font-weight:700; font-size:11pt; }
+  .pr-list .c-pos { width:16mm; font-family:Georgia,"Times New Roman",serif; font-style:italic; font-size:9pt; color:#444; border-right:0.35mm dashed #888; }
+  .pr-list .c-zh { padding-left:5mm; }
+  .pr-list .c-chk { width:9mm; text-align:center; color:#999; }
+  .pr-list .blank { color:transparent; }
+  .pr-list-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:3mm; }
+  .pr-list-head h3 { font-size:12pt; margin:0; }
+  .pr-list-head span { font-size:8pt; color:#666; }
+  .pr-list th, .pr-list td, .pr-list tr { background:#fff !important; color:#111; }
+  .pr-list .c-no, .pr-list .c-chk { color:#888; }
+  .pr-list .blank { color:transparent !important; }
+  #printRoot { display:none; }
+  @media print {
+    @page { size:A4 portrait; margin:0; }
+    html.pr-printing body { padding:0 !important; background:#fff !important; }
+    html.pr-printing body > *:not(#printRoot) { display:none !important; }
+    html.pr-printing #printRoot { display:block; }
+    #printRoot .pr-sheet { break-after:page; page-break-after:always; box-shadow:none; margin:0; }
+    #printRoot .pr-sheet:last-child { break-after:auto; page-break-after:auto; }
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <span style="font-size:1.6rem;">📘</span>
+      <div>
+        <h1>學測英文 C 級補強單字（<span class="n-total">807</span>字）互動系統</h1>
+      </div>
+      <span class="version-badge">v1.0</span>
+    </div>
+    <div class="header-stats">
+      <span class="stat-pill mastered" id="statMastered">✅ 已熟記：0 / 807</span>
+      <span class="stat-pill learning" id="statLearning">📌 待加強：0</span>
+      <button class="btn" onclick="toggleTheme()" id="themeBtn">🌙 深色模式</button>
+      <button class="btn" onclick="exportProgress()">💾 匯出進度</button>
+      <button class="btn" onclick="document.getElementById('importFile').click()">📂 匯入進度</button>
+      <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importProgress(this)">
+      <button class="btn" onclick="resetProgress()">🔄 重置</button>
+    </div>
+  </div>
+</header>
+
+<nav class="nav-tabs">
+  <button class="tab-btn active" onclick="switchTab('explorer', this)">📚 單字探索總覽 (<span class="n-total">807</span>)</button>
+  <button class="tab-btn" onclick="switchTab('flashcards', this)">🗂️ 3D 翻轉單字卡</button>
+  <button class="tab-btn" onclick="switchTab('quiz', this)">✍️ 詞義與例句測驗</button>
+  <button class="tab-btn" onclick="switchTab('schedule', this)">📅 <span class="n-weeks">21</span> 週背誦進度計畫</button>
+  <button class="tab-btn" onclick="switchTab('analytics', this)">📊 優先度與頻率分析</button>
+  <button class="tab-btn" onclick="switchTab('print', this); prRender()">🖨️ 列印字卡</button>
+</nav>
+
+<main>
+  <!-- TAB 1: EXPLORER -->
+  <section id="tab-explorer" class="tab-panel active">
+    <div class="filter-panel">
+      <div class="filter-group">
+        <label>🔍 關鍵字搜尋（單字／中文／同字族／例句）</label>
+        <input type="text" id="searchInput" class="filter-input" placeholder="例如：league、聯盟、conference" oninput="resetExplorer()">
+      </div>
+      <div class="filter-group">
+        <label>🏷️ 大考中心級別</label>
+        <select id="levelFilter" class="filter-select" onchange="resetExplorer()">
+          <option value="all">全部級別</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>🔤 詞性篩選</label>
+        <select id="posFilter" class="filter-select" onchange="resetExplorer()">
+          <option value="all">全部詞性</option>
+          <option value="n.">名詞 (含 n.)</option>
+          <option value="v.">動詞 (含 v.)</option>
+          <option value="adj.">形容詞 (含 adj.)</option>
+          <option value="adv.">副詞/介系詞 (adv./prep.)</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>📅 週次進度</label>
+        <select id="weekFilter" class="filter-select" onchange="resetExplorer()">
+          <option value="all">全部週次</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>⭐ 建議優先度</label>
+        <select id="examFilter" class="filter-select" onchange="resetExplorer()">
+          <option value="all">全部單字</option>
+          <option value="高">優先度「高」</option>
+          <option value="中">優先度「中」</option>
+          <option value="低">優先度「低」</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>📌 學習熟悉度</label>
+        <select id="statusFilter" class="filter-select" onchange="resetExplorer()">
+          <option value="all">全部狀態</option>
+          <option value="unmarked">未標記</option>
+          <option value="learning">📌 待加強</option>
+          <option value="mastered">✅ 已熟記</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>↕️ 排序方式</label>
+        <select id="sortFilter" class="filter-select" onchange="resetExplorer()">
+          <option value="rank">依建議排名（優先度＋日常頻率）</option>
+          <option value="alpha">依字母順序 (A → Z)</option>
+          <option value="zipf">依日常使用頻率 (高 → 低)</option>
+          <option value="level">依詞彙級別 (L3 → L6)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="toolbar-row">
+      <div id="resultCount" style="font-weight:700; color:var(--text-muted);">顯示 807 個單字</div>
+      <div class="toolbar-actions">
+        <button class="btn" id="maskZhBtn" onclick="toggleMask('zh')">👁️ 遮罩中文自測</button>
+        <button class="btn" id="maskEnBtn" onclick="toggleMask('en')">👁️ 遮罩英文自測</button>
+        <button class="btn active-toggle" id="viewGridBtn" onclick="setExplorerView('grid')">🪪 卡片視圖</button>
+        <button class="btn" id="viewTableBtn" onclick="setExplorerView('table')">📋 表格視圖</button>
+      </div>
+    </div>
+
+    <div id="explorerContainer"></div>
+  </section>
+
+  <!-- TAB 2: FLASHCARDS -->
+  <section id="tab-flashcards" class="tab-panel">
+    <div class="fc-container">
+      <div class="filter-panel" style="margin-bottom:8px;">
+        <div class="filter-group">
+          <label>選擇週次範圍</label>
+          <select id="fcWeekFilter" class="filter-select" onchange="initFlashcards()">
+            <option value="all">全部週次</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>選擇熟悉度</label>
+          <select id="fcStatusFilter" class="filter-select" onchange="initFlashcards()">
+            <option value="all">全部單字</option>
+            <option value="learning">📌 僅看「待加強」</option>
+            <option value="unmarked">僅看「未標記」</option>
+          </select>
+        </div>
+        <div class="filter-group" style="justify-content:flex-end;">
+          <button class="btn" onclick="shuffleFlashcards()">🔀 隨機洗牌</button>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.9rem; color:var(--text-muted);">
+        <span id="fcCounter">第 1 / 807 張</span>
+        <span>⌨️ 快捷鍵：空白鍵翻面｜← → 切換｜S 發音｜1 待加強｜2 已熟記</span>
+      </div>
+
+      <div class="fc-stage" onclick="flipCard()">
+        <div class="fc-card" id="fcCard">
+          <div class="fc-face fc-front" id="fcFront"></div>
+          <div class="fc-face fc-back" id="fcBack"></div>
+        </div>
+      </div>
+
+      <div class="fc-controls">
+        <button class="btn" onclick="prevCard()">⬅️ 上一張</button>
+        <button class="btn" onclick="speakCurrentCard('en-US')">🔊 美式發音 (S)</button>
+        <button class="btn" onclick="speakCurrentCard('en-GB')">🔊 英式發音</button>
+        <button class="btn btn-learning" onclick="markCurrentCard('learning')">📌 待加強 (1)</button>
+        <button class="btn btn-mastered" onclick="markCurrentCard('mastered')">✅ 已熟記 (2)</button>
+        <button class="btn btn-primary" onclick="nextCard()">下一張 ➡️</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3: QUIZ -->
+  <section id="tab-quiz" class="tab-panel">
+    <div class="quiz-box">
+      <div class="filter-panel" style="margin-bottom:16px;">
+        <div class="filter-group">
+          <label>🎯 測驗題型</label>
+          <select id="quizType" class="filter-select">
+            <option value="en2zh">看英文選中文（常考詞義）</option>
+            <option value="zh2en">看中文選英文（拼字辨識）</option>
+            <option value="cloze">例句填空挑戰（僅含例句出現本字者）</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>📅 測驗範圍</label>
+          <select id="quizScope" class="filter-select">
+            <option value="all">全部 C 級單字</option>
+<option value="priority">⭐ 優先度「高」單字</option>
+            <option value="learning">📌 僅測驗「待加強」單字</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>📝 題數</label>
+          <select id="quizCount" class="filter-select">
+            <option value="10">10 題</option>
+            <option value="20">20 題</option>
+            <option value="30">30 題</option>
+          </select>
+        </div>
+        <div class="filter-group" style="justify-content:flex-end;">
+          <button class="btn btn-primary" onclick="startQuiz()">🚀 開始新測驗</button>
+        </div>
+      </div>
+      <div id="quizPlayArea"></div>
+    </div>
+  </section>
+
+  <!-- TAB 4: 12-WEEK SCHEDULE -->
+  <section id="tab-schedule" class="tab-panel">
+    <div class="panel-card" style="margin-bottom:16px;">
+      <h3 style="margin-bottom:6px;">📅 <span class="n-weeks">21</span> 週 C 級單字間隔複習計畫</h3>
+      <p style="font-size:0.9rem; color:var(--text-muted);" id="scheduleIntro"></p>
+    </div>
+    <div class="week-grid" id="scheduleGrid"></div>
+  </section>
+
+  <!-- TAB 5: ANALYTICS -->
+  <section id="tab-analytics" class="tab-panel">
+    <div class="panel-card" style="margin-bottom:16px;">
+      <h3 style="margin-bottom:6px;">📐 C 級補強單字的資料說明</h3>
+      <p style="font-size:0.9rem; color:var(--text-muted);">
+        C 級收錄<strong>歷屆學測、指考（106–115）都沒有考過</strong>、但在大考中心參考詞彙表 Level 4–5 內的單字，另加編者指定的補充字。<br>
+        因為沒有歷屆考頻，這裡改看<strong>日常使用頻率（Zipf 值，數字越大代表一般英文越常見）</strong>與<strong>建議優先度（高／中／低）</strong>。例句是自編的，不是歷屆原句。<br>
+        排名與週次先排優先度「高」，同優先度再依日常頻率由高到低。
+      </p>
+    </div>
+    <div class="analytics-grid" id="analyticsGrid"></div>
+  </section>
+  <!-- TAB: PRINT -->
+  <section id="tab-print" class="tab-panel">
+    <div class="panel-card" style="margin-bottom:16px">
+      <div class="filter-group" style="margin-bottom:14px">
+        <label>要印哪些字</label>
+        <div class="pr-options">
+          <label class="pr-chip"><input type="radio" name="prRange" value="week" checked onchange="prRender()"> 依週次</label>
+          <label class="pr-chip"><input type="radio" name="prRange" value="learning" onchange="prRender()"> 只印「待加強」</label>
+          <label class="pr-chip"><input type="radio" name="prRange" value="rank" onchange="prRender()"> 依排名區間</label>
+        </div>
+        <div class="pr-sub" id="prSubWeek">
+          第 <select id="prWeek" class="filter-select" onchange="prRender()"></select> 週
+        </div>
+        <div class="pr-sub" id="prSubRank" style="display:none">
+          第 <input type="number" id="prFrom" class="filter-input" min="1" value="1" style="width:5.5em" oninput="prRender()">
+          到 <input type="number" id="prTo" class="filter-input" min="1" value="40" style="width:5.5em" oninput="prRender()"> 名
+        </div>
+        <label class="pr-chip" id="prSkipWrap" style="margin-top:8px;align-self:flex-start"><input type="checkbox" id="prSkipMastered" onchange="prRender()"> 跳過已標「已熟記」的字</label>
+      </div>
+      <div class="filter-group">
+        <label>印成什麼</label>
+        <div class="pr-options">
+          <label class="pr-chip"><input type="radio" name="prFormat" value="cards" checked onchange="prRender()"> 對折字卡（每頁 8 張）</label>
+          <label class="pr-chip"><input type="radio" name="prFormat" value="list" onchange="prRender()"> 自我測驗單字表（每頁 36 字）</label>
+        </div>
+        <div class="pr-sub" id="prSubList" style="display:none">
+          中文欄：
+          <select id="prListMode" class="filter-select" onchange="prRender()">
+            <option value="full">印出中文（對折遮住自我測驗）</option>
+            <option value="blank">留白（自己寫中文，再回網頁對答案）</option>
+          </select>
+        </div>
+      </div>
+      <p class="pr-tips" id="prTips"></p>
+    </div>
+    <div class="pr-summary">
+      <strong id="prCount"></strong>
+      <button class="btn btn-primary" id="prPrintBtn" onclick="prPrint()">🖨️ 列印</button>
+    </div>
+    <div class="pr-preview" id="prPreview"></div>
+  </section>
+</main>
+<div id="printRoot"></div>
+
+<!-- WORD DETAIL MODAL -->
+<div class="modal-backdrop" id="wordModal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-content" id="wordModalContent"></div>
+</div>
+
+<script>
+const WEEKS_INFO = [{"week":1,"title":"第 1 週","wordCount":39,"mix":"優先度 高 39","review":"—"},{"week":2,"title":"第 2 週","wordCount":39,"mix":"優先度 高 39","review":"第 1 週"},{"week":3,"title":"第 3 週","wordCount":39,"mix":"優先度 高 39","review":"第 2 週＋第 1 週"},{"week":4,"title":"第 4 週","wordCount":39,"mix":"優先度 高 39","review":"第 3 週＋第 1 週"},{"week":5,"title":"第 5 週","wordCount":39,"mix":"優先度 高 39","review":"第 4 週＋第 1 週"},{"week":6,"title":"第 6 週","wordCount":39,"mix":"優先度 高 39","review":"第 5 週＋第 2 週"},{"week":7,"title":"第 7 週","wordCount":39,"mix":"優先度 高 39","review":"第 6 週＋第 3 週"},{"week":8,"title":"第 8 週","wordCount":39,"mix":"優先度 高 39","review":"第 7 週＋第 4 週"},{"week":9,"title":"第 9 週","wordCount":39,"mix":"優先度 高 5／中 34","review":"第 8 週＋第 5 週"},{"week":10,"title":"第 10 週","wordCount":38,"mix":"優先度 中 38","review":"第 9 週＋第 6 週"},{"week":11,"title":"第 11 週","wordCount":38,"mix":"優先度 中 38","review":"第 10 週＋第 7 週"},{"week":12,"title":"第 12 週","wordCount":38,"mix":"優先度 中 38","review":"第 11 週＋第 8 週"},{"week":13,"title":"第 13 週","wordCount":38,"mix":"優先度 中 38","review":"第 12 週＋第 9 週"},{"week":14,"title":"第 14 週","wordCount":38,"mix":"優先度 中 38","review":"第 13 週＋第 10 週"},{"week":15,"title":"第 15 週","wordCount":38,"mix":"優先度 中 38","review":"第 14 週＋第 11 週"},{"week":16,"title":"第 16 週","wordCount":38,"mix":"優先度 中 38","review":"第 15 週＋第 12 週"},{"week":17,"title":"第 17 週","wordCount":38,"mix":"優先度 中 38","review":"第 16 週＋第 13 週"},{"week":18,"title":"第 18 週","wordCount":38,"mix":"優先度 中 38","review":"第 17 週＋第 14 週"},{"week":19,"title":"第 19 週","wordCount":38,"mix":"優先度 中 38","review":"第 18 週＋第 15 週"},{"week":20,"title":"第 20 週","wordCount":38,"mix":"優先度 中 11／低 27","review":"第 19 週＋第 16 週"},{"week":21,"title":"第 21 週","wordCount":38,"mix":"優先度 低 38","review":"第 20 週＋第 17 週"}];
+const RAW_WORDS = [[1,"league","n./v.",5,"聯盟；聯賽","",5.13,"高","Our school basketball team won first place in the city **league** this year.（自編例句）","我們學校的籃球隊今年在市內**聯賽**中拿下第一名。",1],[2,"conference","n.",4,"會議；研討會","",5.01,"高","More than 500 scientists attended the international **conference** on climate change.（自編例句）","超過五百位科學家出席了這場關於氣候變遷的國際**研討會**。",1],[3,"episode","n.",5,"（影集的）一集；事件","",4.97,"高","I stayed up late to watch the final **episode** of the drama.（自編例句）","我熬夜看完這部劇的最後一**集**。",1],[4,"agent","n.",4,"代理人；經紀人","agency",4.81,"高","The singer's **agent** arranged all of her concerts in Asia.（自編例句）","那位歌手的**經紀人**安排了她在亞洲的所有演唱會。",1],[5,"weird","adj.",5,"奇怪的；怪異的","",4.81,"高","I heard a **weird** noise coming from the kitchen in the middle of the night.（自編例句）","半夜我聽到廚房傳來一陣**奇怪的**聲音。",1],[6,"software","n.",4,"軟體","",4.77,"高","You need to update the **software** on your phone to fix the problem.（自編例句）","你需要更新手機上的**軟體**才能解決這個問題。",1],[7,"republican","n./adj.",5,"共和的；共和黨員","republic",4.7,"高","France has had a **republican** system of government since the 19th century.（自編例句）","法國從十九世紀起就採行**共和**體制。",1],[8,"attorney","n.",5,"律師","",4.69,"高","She hired an **attorney** to help her with the contract dispute.（自編例句）","她請了一位**律師**協助處理合約糾紛。",1],[9,"squad","n.",5,"小隊；（運動）隊伍","",4.67,"高","A rescue **squad** was sent to search for the missing hikers.（自編例句）","一支救難**小隊**被派去搜尋失蹤的登山客。",1],[10,"candidate","n.",4,"候選人；應試者","",4.66,"高","Each **candidate** will have ten minutes to answer questions from the voters.（自編例句）","每位**候選人**有十分鐘回答選民的提問。",1],[11,"confidence","n.",4,"信心；自信","confident、confidential",4.65,"高","Practicing every day gave her the **confidence** to speak English in public.（自編例句）","每天練習讓她有**自信**在眾人面前說英文。",1],[12,"corporate","adj.",5,"公司的；企業的","corporation",4.64,"高","Many **corporate** offices now allow employees to work from home two days a week.（自編例句）","現在許多**企業**辦公室允許員工每週在家工作兩天。",1],[13,"phase","n./v.",5,"階段；時期","",4.64,"高","The first **phase** of the new MRT line will open next year.（自編例句）","新捷運線的第一**階段**將於明年通車。",1],[14,"context","n.",4,"上下文；背景","",4.63,"高","If you don't know a word, try to guess its meaning from the **context**.（自編例句）","遇到不認識的字，可以試著從**上下文**猜出它的意思。",1],[15,"assembly","n.",4,"集會；組裝","assemble",4.61,"高","The principal announced the good news at the morning **assembly**.（自編例句）","校長在**朝會**上宣布了這個好消息。",1],[16,"relevant","adj.",4,"相關的；切題的","relevance、irrelevant",4.61,"高","Please make sure your answer is **relevant** to the question.（自編例句）","請確定你的回答和問題**相關**。",1],[17,"solo","n./adv./adj.",5,"單獨的；獨奏","",4.61,"高","She performed a piano **solo** at the school concert.（自編例句）","她在學校音樂會上表演鋼琴**獨奏**。",1],[18,"maximum","adj./n.",4,"最大的；最大量","maximize",4.6,"高","The **maximum** number of people allowed in this elevator is twelve.（自編例句）","這部電梯允許搭乘的**最大**人數是十二人。",1],[19,"assistance","n.",4,"協助；援助","assist、assistant",4.59,"高","If you need any **assistance**, please call the front desk.（自編例句）","如果需要任何**協助**，請打電話到櫃檯。",1],[20,"corporation","n.",5,"（大型）公司；企業","corporate",4.59,"高","He works as an engineer for a large technology **corporation**.（自編例句）","他在一家大型科技**公司**擔任工程師。",1],[21,"resolution","n.",4,"決心；決議","resolve",4.59,"高","My New Year's **resolution** is to read one English book every month.（自編例句）","我的新年**決心**是每個月讀一本英文書。",1],[22,"senator","n.",5,"參議員","senate",4.58,"高","The **senator** gave a speech about education reform.（自編例句）","那位**參議員**發表了一場關於教育改革的演說。",1],[23,"scheme","n./v.",5,"計畫；詭計","",4.57,"高","The police discovered a **scheme** to cheat elderly people out of their savings.（自編例句）","警方破獲一起騙取老人積蓄的**詭計**。",1],[24,"personnel","n.",5,"人員；人事部門","",4.56,"高","Only authorized **personnel** are allowed to enter this area.（自編例句）","只有經過授權的**人員**才能進入這個區域。",1],[25,"premier","adj./n.",5,"總理；首要的","",4.56,"高","The **premier** met with business leaders to discuss the economy.（自編例句）","**總理**與企業領袖會面，討論經濟問題。",1],[26,"tournament","n.",5,"錦標賽","",4.56,"高","Our team made it to the final round of the tennis **tournament**.（自編例句）","我們隊打進了網球**錦標賽**的決賽。",1],[27,"deputy","n.",5,"副手；代理人","",4.55,"高","The **deputy** mayor attended the ceremony on behalf of the mayor.（自編例句）","**副**市長代表市長出席了典禮。",1],[28,"maintenance","n.",5,"維修；保養","maintain",4.55,"高","The swimming pool is closed this week for **maintenance**.（自編例句）","游泳池本週因**維修**而關閉。",1],[29,"retail","n./adj./adv./v.",5,"零售","",4.55,"高","She works in **retail**, selling clothes at a department store.（自編例句）","她從事**零售**業，在百貨公司賣衣服。",1],[30,"battery","n.",4,"電池","",4.52,"高","My phone's **battery** runs out quickly when I play games.（自編例句）","我玩遊戲時，手機**電池**很快就沒電了。",1],[31,"fantasy","n.",4,"幻想；奇幻","fantastic",4.52,"高","Harry Potter is a famous **fantasy** series loved by readers of all ages.（自編例句）","《哈利波特》是一套深受各年齡層讀者喜愛的知名**奇幻**系列作品。",1],[32,"presidential","adj.",5,"總統的","president",4.52,"高","The **presidential** election will be held next January.（自編例句）","**總統**大選將於明年一月舉行。",1],[33,"clinical","adj.",5,"臨床的","clinic",4.51,"高","The new medicine is still in **clinical** trials.（自編例句）","這種新藥還在**臨床**試驗階段。",1],[34,"jury","n.",5,"陪審團","",4.49,"高","The **jury** decided that the man was not guilty.（自編例句）","**陪審團**判定那名男子無罪。",1],[35,"audio","adj.",4,"音訊的；聲音的","",4.47,"高","You can download the **audio** files and listen to them on the bus.（自編例句）","你可以下載這些**音訊**檔，在公車上聽。",1],[36,"circuit","n.",5,"電路；巡迴","",4.47,"高","A broken wire in the **circuit** caused the light to stop working.（自編例句）","**電路**裡有一條斷掉的電線，導致燈不亮。",1],[37,"elsewhere","adv.",4,"在別處","",4.46,"高","This shop is too expensive; let's look for a cheaper one **elsewhere**.（自編例句）","這家店太貴了，我們去**別處**找便宜一點的吧。",1],[38,"extension","n.",5,"延長；擴建；分機","extend、extensive",4.46,"高","The teacher gave us a one-week **extension** on our project.（自編例句）","老師讓我們的報告**延長**一週繳交。",1],[39,"infrastructure","n.",5,"基礎建設","",4.46,"高","The government plans to spend more on **infrastructure** such as roads and bridges.（自編例句）","政府計畫在道路、橋梁等**基礎建設**上投入更多經費。",1],[40,"ridiculous","adj.",5,"荒謬的；可笑的","ridicule",4.46,"高","It's **ridiculous** to wear a winter coat on such a hot day.（自編例句）","在這麼熱的天氣穿冬天的外套真是太**可笑**了。",2],[41,"server","n.",5,"伺服器；服務生","serve",4.46,"高","The website went down because the **server** was overloaded.（自編例句）","因為**伺服器**負荷過重，網站當機了。",2],[42,"transition","n.",5,"轉變；過渡","",4.46,"高","Moving from junior high to senior high is a big **transition** for many students.（自編例句）","從國中升上高中，對許多學生來說是一大**轉變**。",2],[43,"alongside","prep./adv.",5,"在旁邊；與…一起","",4.45,"高","Volunteers worked **alongside** the firefighters to clean up the streets.（自編例句）","志工**與**消防員**一起**清理街道。",2],[44,"bonus","n.",5,"獎金；額外的好處","",4.45,"高","All the workers received a year-end **bonus**.（自編例句）","所有員工都領到了年終**獎金**。",2],[45,"formula","n.",4,"公式；配方","formulate",4.45,"高","Do you remember the **formula** for the area of a circle?（自編例句）","你記得圓面積的**公式**嗎？",2],[46,"fort","n.",4,"堡壘；要塞","",4.45,"高","The Dutch built a **fort** in Tainan in the 17th century.（自編例句）","荷蘭人在十七世紀於臺南建了一座**堡壘**。",2],[47,"gross","adj./v./n.",5,"噁心的；總的","",4.45,"高","There's a dead bug in my soup. That's so **gross**!（自編例句）","我的湯裡有一隻死蟲，好**噁心**！",2],[48,"photography","n.",4,"攝影","photograph、photographer",4.45,"高","He became interested in **photography** after his father gave him a camera.（自編例句）","父親送他一台相機之後，他就對**攝影**產生了興趣。",2],[49,"guarantee","v./n.",4,"保證","",4.44,"高","The shop will **guarantee** a full refund if you are not satisfied.（自編例句）","如果你不滿意，店家**保證**全額退款。",2],[50,"output","n./v.",5,"產量；輸出","",4.43,"高","The factory increased its **output** by 20 percent last year.（自編例句）","這座工廠去年的**產量**增加了百分之二十。",2],[51,"strategic","adj.",5,"策略的；戰略上的","strategy",4.43,"高","The city is located in a **strategic** position near the border.（自編例句）","這座城市位於靠近邊界的**戰略**要地。",2],[52,"welfare","n.",4,"福利；幸福","",4.43,"高","The new law aims to protect the **welfare** of children.（自編例句）","這項新法旨在保障兒童的**福利**。",2],[53,"hockey","n.",5,"曲棍球","",4.42,"高","Ice **hockey** is a popular sport in Canada.（自編例句）","冰上**曲棍球**在加拿大是很受歡迎的運動。",2],[54,"priority","n.",4,"優先事項","prior",4.41,"高","Safety is our top **priority** during the trip.（自編例句）","在這趟旅行中，安全是我們最**優先**的考量。",2],[55,"alliance","n.",5,"聯盟","ally",4.4,"高","Several countries formed an **alliance** to fight terrorism.（自編例句）","幾個國家組成**聯盟**對抗恐怖主義。",2],[56,"crystal","n./adj.",5,"水晶；晶體","",4.4,"高","She wore a **crystal** necklace to the party.（自編例句）","她戴著一條**水晶**項鍊去參加派對。",2],[57,"decent","adj.",5,"像樣的；得體的","",4.4,"高","It's hard to find a **decent** apartment near the city center at a low price.（自編例句）","在市中心附近很難用低價租到**像樣的**公寓。",2],[58,"insane","adj.",5,"瘋狂的；精神失常的","",4.4,"高","It would be **insane** to go swimming in the sea during a typhoon.（自編例句）","颱風天去海邊游泳是**瘋狂的**舉動。",2],[59,"nowhere","adv./pron.",5,"哪裡都不；無處","",4.4,"高","The cat was **nowhere** to be found.（自編例句）","那隻貓**哪裡都**找**不**到。",2],[60,"idiot","n.",5,"白痴；笨蛋","",4.39,"高","I felt like an **idiot** when I realized I had worn my shirt inside out.（自編例句）","發現自己把上衣穿反的時候，我覺得自己像個**笨蛋**。",2],[61,"mortgage","n.",5,"房貸；抵押","",4.39,"高","They took out a 20-year **mortgage** to buy their first house.（自編例句）","他們申請了二十年的**房貸**買下第一間房子。",2],[62,"narrative","n./adj.",5,"敘事；敘述的","narrate、narrator",4.39,"高","The novel's **narrative** is told from the point of view of a young girl.（自編例句）","這本小說的**敘事**是從一個小女孩的觀點出發。",2],[63,"translation","n.",4,"翻譯","translate、translator",4.39,"高","Some jokes are lost in **translation**.（自編例句）","有些笑話經過**翻譯**就不好笑了。",2],[64,"possession","n.",4,"擁有；財產","possess",4.38,"高","The fire destroyed all of their **possessions**.（自編例句）","大火燒毀了他們所有的**財產**。",2],[65,"valid","adj.",5,"有效的；合理的","validity",4.38,"高","Your student ID card is no longer **valid** after you graduate.（自編例句）","畢業後你的學生證就不再**有效**。",2],[66,"creek","n.",5,"小溪","",4.37,"高","The children caught small fish in the **creek** behind the village.（自編例句）","孩子們在村子後面的**小溪**裡抓小魚。",2],[67,"fraud","n.",5,"詐欺；騙子","",4.37,"高","The man was arrested for credit card **fraud**.（自編例句）","那名男子因信用卡**詐欺**被逮捕。",2],[68,"legacy","n.",5,"遺產；遺留下來的事物","",4.37,"高","The artist's **legacy** lives on through his paintings.（自編例句）","這位畫家留下的**遺產**透過他的畫作流傳下來。",2],[69,"reverse","v./adj./n.",5,"顛倒；相反的","",4.37,"高","The results were the **reverse** of what we expected.（自編例句）","結果和我們預期的正好**相反**。",2],[70,"divorce","n./v.",4,"離婚","",4.36,"高","Her parents got a **divorce** when she was ten.（自編例句）","她十歲時，父母**離婚**了。",2],[71,"frequency","n.",4,"頻率；次數","frequent",4.36,"高","The **frequency** of typhoons in this area has increased in recent years.（自編例句）","近年來這個地區颱風發生的**頻率**增加了。",2],[72,"logic","n.",4,"邏輯","logical",4.36,"高","There is no **logic** in his argument; the conclusion does not follow from the facts.（自編例句）","他的論點毫無**邏輯**，結論根本無法從事實推出來。",2],[73,"residence","n.",5,"住所；居住","reside、resident、residential",4.36,"高","The old house was once the **residence** of a famous writer.（自編例句）","這棟老房子曾是一位知名作家的**住所**。",2],[74,"script","n./v.",5,"劇本；腳本","",4.36,"高","The actors spent weeks learning the **script** for the play.（自編例句）","演員們花了好幾週背這齣戲的**劇本**。",2],[75,"chemistry","n.",4,"化學；（人與人之間的）默契","chemical、chemist",4.35,"高","We did an interesting experiment in **chemistry** class today.（自編例句）","我們今天在**化學**課做了一個有趣的實驗。",2],[76,"corruption","n.",5,"貪汙；腐敗","corrupt",4.35,"高","The official was sent to prison for **corruption**.（自編例句）","那名官員因**貪汙**入獄。",2],[77,"gorgeous","adj.",5,"極美的；華麗的","",4.35,"高","The view of the sunset from the mountain was **gorgeous**.（自編例句）","從山上看夕陽，景色**極美**。",2],[78,"grateful","adj.",4,"感激的","gratitude",4.35,"高","I'm very **grateful** for all the help you gave me.（自編例句）","我非常**感激**你給我的所有幫助。",2],[79,"impression","n.",4,"印象","impress、impressive",4.35,"高","It's important to make a good first **impression** at a job interview.（自編例句）","求職面試時，給人良好的第一**印象**很重要。",3],[80,"progressive","adj./n.",5,"進步的；漸進的","progress",4.34,"高","The city is known for its **progressive** policies on the environment.（自編例句）","這座城市以**進步的**環保政策著稱。",3],[81,"rally","n./v.",5,"集會；重新振作","",4.34,"高","Thousands of people joined the **rally** to protect the environment.（自編例句）","數千人參加了保護環境的**集會**。",3],[82,"compensation","n.",5,"補償；賠償","compensate",4.33,"高","The workers received **compensation** for their injuries.（自編例句）","工人們因受傷獲得了**賠償**。",3],[83,"constitutional","adj./n.",5,"憲法的","constitution",4.33,"高","Freedom of speech is a **constitutional** right in many countries.（自編例句）","在許多國家，言論自由是**憲法**保障的權利。",3],[84,"fleet","n.",5,"船隊；車隊","",4.33,"高","The company has a **fleet** of 200 delivery trucks.（自編例句）","這家公司擁有一支兩百輛貨車的**車隊**。",3],[85,"mechanical","adj.",4,"機械的","mechanic、mechanism",4.33,"高","The train was delayed because of a **mechanical** problem.（自編例句）","火車因為**機械**故障而誤點。",3],[86,"pregnancy","n.",4,"懷孕","pregnant",4.33,"高","Doctors advise women not to drink alcohol during **pregnancy**.（自編例句）","醫生建議婦女在**懷孕**期間不要喝酒。",3],[87,"premium","n.",5,"保險費；優質的","",4.33,"高","She pays a monthly **premium** for her health insurance.（自編例句）","她每個月都要繳健康保險的**保費**。",3],[88,"residential","adj.",5,"住宅的","residence、resident",4.33,"高","Trucks are not allowed to drive through this **residential** area at night.（自編例句）","晚上大貨車禁止行經這個**住宅**區。",3],[89,"apparent","adj.",4,"明顯的；表面上的","apparently",4.32,"高","It soon became **apparent** that nobody knew the answer.（自編例句）","很快就**明顯**看出沒有人知道答案。",3],[90,"communist","adj./n.",5,"共產主義的；共產黨員","communism",4.32,"高","Cuba is one of the few **communist** countries in the world today.（自編例句）","古巴是當今世界上少數的**共產**國家之一。",3],[91,"faculty","n.",5,"全體教師；能力","",4.32,"高","The university hired ten new **faculty** members this year.（自編例句）","這所大學今年新聘了十位**教師**。",3],[92,"legislative","adj.",5,"立法的","legislation、legislator",4.32,"高","The **legislative** branch of government is responsible for making laws.（自編例句）","政府的**立法**部門負責制定法律。",3],[93,"registration","n.",4,"註冊；報名","register",4.32,"高","Online **registration** for the summer camp ends on Friday.（自編例句）","夏令營的線上**報名**於星期五截止。",3],[94,"romance","n.",4,"戀情；浪漫","romantic",4.32,"高","The movie tells the story of a summer **romance** between two students.（自編例句）","這部電影講述兩名學生之間的一段夏日**戀情**。",3],[95,"versus","prep.",5,"對；對抗","",4.32,"高","Tonight's game is Taiwan **versus** Japan.（自編例句）","今晚的比賽是台灣**對**日本。",3],[96,"virtual","adj.",5,"虛擬的；實際上的","virtually",4.32,"高","With this headset, you can take a **virtual** tour of the museum.（自編例句）","戴上這個頭戴裝置，你就能**虛擬**參觀博物館。",3],[97,"discrimination","n.",5,"歧視；辨別","discriminate",4.31,"高","The law protects workers from **discrimination** based on gender or age.（自編例句）","這項法律保護勞工免於因性別或年齡而受到**歧視**。",3],[98,"documentary","n./adj.",5,"紀錄片；文件的","document",4.31,"高","We watched a **documentary** about whales in class.（自編例句）","我們在課堂上看了一部關於鯨魚的**紀錄片**。",3],[99,"literary","adj.",4,"文學的","literature",4.31,"高","The novel won several **literary** awards.（自編例句）","這本小說獲得了好幾個**文學**獎。",3],[100,"presentation","n.",4,"報告；簡報","present",4.31,"高","Each group will give a ten-minute **presentation** in English.（自編例句）","每一組要用英文做十分鐘的**報告**。",3],[101,"terminal","n./adj.",5,"航廈；終點站；末期的","",4.31,"高","Our flight leaves from **Terminal** 2.（自編例句）","我們的班機從第二**航廈**起飛。",3],[102,"treaty","n.",5,"條約","",4.31,"高","The two countries signed a peace **treaty** after the war.（自編例句）","戰後兩國簽訂了和平**條約**。",3],[103,"triple","adj./v./n.",5,"三倍的；增為三倍","",4.31,"高","The price of eggs has nearly **tripled** in the past ten years.（自編例句）","過去十年來，雞蛋的價格幾乎漲了**三倍**。",3],[104,"craft","n.",4,"手藝；工藝品","",4.3,"高","The village is famous for its traditional bamboo **crafts**.（自編例句）","這個村莊以傳統竹**工藝品**聞名。",3],[105,"equity","n.",5,"公平；股本","",4.3,"高","The school is working to promote **equity** so that every student has the same chance to succeed.（自編例句）","學校致力於促進教育**公平**，讓每位學生都有同樣的成功機會。",3],[106,"hardware","n.",4,"硬體；五金","",4.3,"高","You can buy nails and paint at the **hardware** store.（自編例句）","你可以在**五金**行買到釘子和油漆。",3],[107,"petition","n.",5,"請願書；請願","",4.3,"高","More than 10,000 people signed the **petition** to save the old tree.（自編例句）","超過一萬人在拯救老樹的**請願書**上簽名。",3],[108,"regime","n.",5,"政權；體制","",4.3,"高","Many people fled the country to escape the military **regime**.（自編例句）","許多人為了逃離軍事**政權**而離開這個國家。",3],[109,"carrier","n.",4,"傳播者；運輸公司","carry",4.29,"高","Mosquitoes are **carriers** of several serious diseases.（自編例句）","蚊子是好幾種嚴重疾病的**傳播者**。",3],[110,"eligible","adj.",5,"有資格的","",4.29,"高","Students with good grades are **eligible** for the scholarship.（自編例句）","成績優良的學生**有資格**申請這筆獎學金。",3],[111,"execution","n.",5,"執行；處決","execute",4.29,"高","The plan was good, but its **execution** was poor.（自編例句）","這個計畫很好，但**執行**得很差。",3],[112,"framework","n.",5,"架構；框架","",4.29,"高","The report provides a clear **framework** for solving the problem.（自編例句）","這份報告為解決問題提供了一個清楚的**架構**。",3],[113,"franchise","n.",5,"加盟權；特許經營","",4.29,"高","He bought a coffee shop **franchise** and opened his own store.（自編例句）","他買下一家咖啡店的**加盟權**，開了自己的店。",3],[114,"dependent","adj./n.",4,"依賴的；受撫養者","depend、dependence、independent",4.28,"高","Many young people are still financially **dependent** on their parents.（自編例句）","許多年輕人在經濟上仍然**依賴**父母。",3],[115,"experimental","adj.",4,"實驗性的","experiment",4.28,"高","The school is trying an **experimental** program that lets students choose their own classes.（自編例句）","學校正在試行一項讓學生自選課程的**實驗性**計畫。",3],[116,"globe","n.",4,"地球；地球儀","global",4.28,"高","The teacher pointed to Taiwan on the **globe**.（自編例句）","老師在**地球儀**上指出台灣的位置。",3],[117,"intent","n./adj.",5,"意圖；專注的","intend、intention",4.28,"高","The man entered the building with the **intent** to steal.（自編例句）","那名男子懷著偷竊的**意圖**進入大樓。",3],[118,"auction","n./v.",5,"拍賣","",4.27,"高","The old painting was sold at **auction** for one million dollars.（自編例句）","那幅古畫在**拍賣**會上以一百萬元售出。",4],[119,"chaos","n.",5,"混亂","chaotic",4.27,"高","The heavy rain caused **chaos** on the roads during rush hour.（自編例句）","大雨造成尖峰時段道路一片**混亂**。",4],[120,"copper","n./adj.",4,"銅","",4.27,"高","Electric wires are usually made of **copper** because it carries electricity well.（自編例句）","電線通常是用**銅**做的，因為銅的導電性很好。",4],[121,"radiation","n.",5,"輻射","",4.27,"高","Too much **radiation** from the sun can damage your skin.（自編例句）","太陽的**輻射**過多會傷害皮膚。",4],[122,"stroke","n./v.",4,"中風；（游泳）划法","",4.27,"高","My grandfather had a **stroke** last year and is still in the hospital.（自編例句）","我爺爺去年**中風**，現在還在住院。",4],[123,"utility","n.",5,"公用事業；效用","",4.27,"高","The city's **utility** companies provide water and electricity.（自編例句）","市內的**公用事業**公司提供水和電。",4],[124,"acquisition","n.",5,"取得；收購","acquire",4.26,"高","The company's **acquisition** of a smaller rival made it the biggest in the market.（自編例句）","這家公司**收購**了一家較小的競爭對手，成為市場上最大的業者。",4],[125,"controversy","n.",5,"爭議","controversial",4.26,"高","The new school rule has caused a lot of **controversy** among parents.（自編例句）","這條新校規在家長之間引起很大的**爭議**。",4],[126,"equality","n.",4,"平等","equal",4.26,"高","The movement fought for **equality** between men and women.（自編例句）","這場運動爭取男女**平等**。",4],[127,"fiscal","adj.",5,"財政的","",4.26,"高","The country is facing a serious **fiscal** crisis.（自編例句）","這個國家正面臨嚴重的**財政**危機。",4],[128,"guardian","n.",4,"監護人；守護者","guard",4.26,"高","Students under 18 need a parent or **guardian** to sign the form.（自編例句）","未滿十八歲的學生需要家長或**監護人**在表格上簽名。",4],[129,"intervention","n.",5,"介入；干預","intervene",4.26,"高","Without quick medical **intervention**, the patient could have died.（自編例句）","如果沒有及時的醫療**介入**，病人可能已經死亡。",4],[130,"mainstream","n.",5,"主流","",4.26,"高","Online shopping used to be unusual, but now it has become **mainstream** in Taiwan.（自編例句）","網路購物以前很少見，現在在台灣已成為**主流**。",4],[131,"offense","n.",4,"冒犯；罪行；進攻","offend、offensive",4.26,"高","No **offense**, but I don't think your idea will work.（自編例句）","無意**冒犯**，但我不認為你的點子行得通。",4],[132,"spectrum","n.",5,"光譜；範圍","",4.26,"高","People from across the political **spectrum** supported the plan.（自編例句）","政治**光譜**上各方人士都支持這個計畫。",4],[133,"terror","n.",4,"恐怖；驚恐","terrible、terrify、terrorist",4.26,"高","The children screamed in **terror** when the lights went out.（自編例句）","燈一熄滅，孩子們就**驚恐**地尖叫。",4],[134,"mercy","n.",4,"仁慈；寬恕","",4.25,"高","The prisoner begged the king for **mercy**.（自編例句）","囚犯向國王乞求**寬恕**。",4],[135,"racism","n.",5,"種族歧視","race、racist",4.25,"高","Schools should teach students to stand up against **racism**.（自編例句）","學校應該教導學生挺身反對**種族歧視**。",4],[136,"venue","n.",5,"場地；會場","",4.25,"高","The **venue** for the concert was changed because of the rain.（自編例句）","演唱會的**場地**因為下雨而更改了。",4],[137,"abortion","n.",5,"墮胎；流產","",4.24,"高","Different countries have very different laws about **abortion**.（自編例句）","各國關於**墮胎**的法律差異很大。",4],[138,"conversion","n.",5,"轉換；改建","convert",4.24,"高","The **conversion** of the old factory into a museum took three years.（自編例句）","把老工廠**改建**成博物館花了三年。",4],[139,"copyright","n./v.",5,"著作權；版權","",4.24,"高","You need permission from the **copyright** owner to use this photo.（自編例句）","你需要取得**著作權**人的許可才能使用這張照片。",4],[140,"democrat","n.",5,"民主主義者；民主黨員","democracy、democratic",4.24,"高","As a true **democrat**, he believes every citizen should have a voice.（自編例句）","身為真正的**民主主義者**，他相信每位公民都應該有發言權。",4],[141,"municipal","adj.",5,"市政的；市立的","",4.24,"高","The **municipal** library is open until nine o'clock at night.（自編例句）","**市立**圖書館開放到晚上九點。",4],[142,"upgrade","v./n.",5,"升級","",4.24,"高","I paid extra to **upgrade** my seat to business class.（自編例句）","我多付錢把座位**升級**到商務艙。",4],[143,"asset","n.",5,"資產；寶貴的人或物","",4.23,"高","Her ability to speak three languages is a great **asset** to the company.（自編例句）","她會說三種語言，是公司很寶貴的**資產**。",4],[144,"civilian","adj./n.",4,"平民；平民的","",4.23,"高","Many **civilians** were hurt in the attack.（自編例句）","許多**平民**在這次攻擊中受傷。",4],[145,"suggestion","n.",4,"建議","suggest",4.23,"高","Thank you for your **suggestion**; we'll think about it.（自編例句）","謝謝你的**建議**，我們會考慮看看。",4],[146,"usage","n.",4,"用法；使用量","",4.23,"高","Our water **usage** goes up a lot in summer.（自編例句）","夏天我們的水**使用量**會大幅增加。",4],[147,"biology","n.",4,"生物學","biological、biologist",4.22,"高","In **biology** class, we learned how plants make food from sunlight.（自編例句）","我們在**生物**課學到植物如何利用陽光製造養分。",4],[148,"canal","n.",5,"運河","",4.22,"高","Venice is famous for its **canals** and boats.（自編例句）","威尼斯以**運河**和船隻聞名。",4],[149,"cruise","n./v.",5,"郵輪之旅；巡航","",4.22,"高","My parents went on a **cruise** to Japan for their anniversary.（自編例句）","我爸媽為了結婚紀念日去搭**郵輪**遊日本。",4],[150,"custody","n.",5,"監護權；拘留","",4.22,"高","After the divorce, the mother was given **custody** of the children.（自編例句）","離婚後，母親取得了孩子的**監護權**。",4],[151,"departure","n.",4,"出發；離開","depart",4.22,"高","Please arrive at the airport two hours before **departure**.（自編例句）","請在**出發**前兩小時抵達機場。",4],[152,"nasty","adj.",5,"惡劣的；令人不快的","",4.22,"高","He made some **nasty** comments about his classmate's appearance.（自編例句）","他對同學的外表說了一些**惡劣的**評論。",4],[153,"pension","n./v.",5,"退休金；養老金","",4.22,"高","After working for 30 years, my grandfather now lives on his **pension**.（自編例句）","工作了三十年後，我爺爺現在靠**退休金**過活。",4],[154,"unemployment","n.",5,"失業；失業率","employ、employment",4.22,"高","**Unemployment** among young people has become a serious problem.（自編例句）","年輕人**失業**已成為嚴重的問題。",4],[155,"nonsense","n.",4,"胡說；廢話","",4.21,"高","Don't believe him. What he said is total **nonsense**.（自編例句）","別相信他，他說的全是**胡說**八道。",4],[156,"operational","adj.",5,"運作的；營運的","operate、operation",4.21,"高","The new hospital will be fully **operational** by next spring.（自編例句）","新醫院將在明年春天全面**運作**。",4],[157,"transformation","n.",5,"轉變；改造","transform",4.21,"高","The old harbor area has gone through a complete **transformation**.（自編例句）","舊港區經歷了徹底的**改造**。",5],[158,"bronze","n./adj.",5,"青銅；銅牌","",4.2,"高","She won a **bronze** medal in the 100-meter race.（自編例句）","她在一百公尺賽跑中奪得**銅**牌。",5],[159,"laser","n.",5,"雷射","",4.2,"高","The doctor used a **laser** to remove the mark on my skin.（自編例句）","醫生用**雷射**除去我皮膚上的斑。",5],[160,"bulk","n.",5,"大量；大部分","",4.19,"高","Buying rice in **bulk** is cheaper.（自編例句）","**大量**購買白米比較便宜。",5],[161,"commentary","n.",5,"評論；實況報導","comment、commentator",4.19,"高","We listened to the live **commentary** of the baseball game on the radio.（自編例句）","我們用收音機收聽棒球比賽的**實況報導**。",5],[162,"confusion","n.",4,"困惑；混亂","confuse",4.19,"高","To avoid **confusion**, please write your name clearly.（自編例句）","為了避免**混亂**，請把名字寫清楚。",5],[163,"customs","n.",5,"海關","",4.19,"高","It took us an hour to get through **customs** at the airport.（自編例句）","我們在機場花了一個小時才通過**海關**。",5],[164,"destiny","n.",5,"命運","",4.19,"高","She believes it was **destiny** that brought them together.（自編例句）","她相信是**命運**讓他們相遇。",5],[165,"nightmare","n.",4,"惡夢","",4.19,"高","I had a **nightmare** that I was late for the exam.（自編例句）","我做了一個考試遲到的**惡夢**。",5],[166,"raid","n./v.",5,"突襲；搜查","",4.19,"高","The police carried out a **raid** on the illegal factory.（自編例句）","警方對那間非法工廠進行了**突襲**。",5],[167,"scenario","n.",5,"情境；可能的情況","",4.19,"高","In the worst **scenario**, the project could be delayed for a year.（自編例句）","在最壞的**情況**下，這項計畫可能會延誤一年。",5],[168,"identification","n.",4,"身分證明；辨認","identify、identity",4.18,"高","You'll need to show some **identification** before you can open a bank account.（自編例句）","你需要出示**身分證明**才能開立銀行帳戶。",5],[169,"metropolitan","adj./n.",5,"大都市的","",4.18,"高","Taipei is a **metropolitan** area with a population of more than six million.（自編例句）","台北是人口超過六百萬的**大都會**區。",5],[170,"physician","n.",4,"醫師；內科醫師","",4.18,"高","You should see a **physician** if the fever doesn't go down.（自編例句）","如果發燒一直不退，你應該去看**醫師**。",5],[171,"rifle","n./v.",5,"步槍","",4.18,"高","The soldiers practiced shooting with their **rifles**.（自編例句）","士兵們用**步槍**練習射擊。",5],[172,"rival","adj./n./v.",5,"對手；競爭的","rivalry",4.18,"高","The two schools have been **rivals** in basketball for decades.（自編例句）","這兩所學校在籃球上是數十年的**對手**。",5],[173,"suite","n.",5,"套房；一套","",4.18,"高","The family stayed in a large **suite** with an ocean view.（自編例句）","這家人住在一間看得到海景的大**套房**。",5],[174,"attendance","n.",5,"出席；出席人數","attend",4.17,"高","Class **attendance** is an important part of your final grade.（自編例句）","上課**出席**是期末成績的重要部分。",5],[175,"compliance","n.",5,"遵守；服從","comply",4.17,"高","All restaurants must be in **compliance** with food safety rules.（自編例句）","所有餐廳都必須**遵守**食品安全規定。",5],[176,"loyalty","n.",4,"忠誠","loyal",4.17,"高","The dog showed great **loyalty** to its owner.（自編例句）","這隻狗對主人非常**忠誠**。",5],[177,"notion","n.",5,"概念；觀念","",4.17,"高","The **notion** that girls are bad at math is simply wrong.（自編例句）","認為女生數學不好的**觀念**根本就是錯的。",5],[178,"partial","adj.",4,"部分的；偏袒的","",4.17,"高","The storm caused a **partial** power outage in the city.（自編例句）","暴風雨造成市區**部分**停電。",5],[179,"propaganda","n.",5,"宣傳；文宣","",4.17,"高","During the war, both sides used **propaganda** to influence the public.（自編例句）","戰爭期間，雙方都利用**宣傳**來影響民眾。",5],[180,"surveillance","n.",5,"監視","",4.17,"高","The store installed **surveillance** cameras to prevent theft.（自編例句）","這家店裝了**監視**攝影機來防止竊盜。",5],[181,"tactics","n.",5,"戰術；策略","",4.17,"高","The coach changed his **tactics** in the second half of the game.（自編例句）","教練在下半場改變了**戰術**。",5],[182,"trophy","n.",5,"獎盃","",4.17,"高","Our team proudly held up the championship **trophy**.（自編例句）","我們隊驕傲地舉起冠軍**獎盃**。",5],[183,"acceptance","n.",4,"接受；錄取","accept、acceptable",4.16,"高","She received a letter of **acceptance** from the university.（自編例句）","她收到了大學的**錄取**通知書。",5],[184,"casino","n.",5,"賭場","",4.16,"高","People over 21 can enter the **casino** in Las Vegas.（自編例句）","在拉斯維加斯，年滿二十一歲才能進入**賭場**。",5],[185,"counsel","n./v.",5,"勸告；建議","counselor",4.16,"高","She went to her teacher for **counsel** about choosing a university.（自編例句）","她向老師尋求選大學的**建議**。",5],[186,"determination","n.",4,"決心","determine、determined",4.16,"高","With hard work and **determination**, she finally passed the exam.（自編例句）","憑著努力與**決心**，她終於通過了考試。",5],[187,"installation","n.",5,"安裝；裝置藝術","install",4.16,"高","The **installation** of the new air conditioner took two hours.（自編例句）","新冷氣的**安裝**花了兩個小時。",5],[188,"marathon","n.",4,"馬拉松","",4.16,"高","He ran his first **marathon** at the age of sixty.（自編例句）","他在六十歲時跑了人生第一場**馬拉松**。",5],[189,"preliminary","adj./n.",5,"初步的；預賽","",4.16,"高","**Preliminary** results show that the new medicine works.（自編例句）","**初步**結果顯示這種新藥有效。",5],[190,"satisfaction","n.",4,"滿意；滿足","satisfy、satisfactory",4.16,"高","Customer **satisfaction** is our main goal.（自編例句）","顧客**滿意**是我們的主要目標。",5],[191,"scratch","n./v.",4,"抓；刮痕","",4.16,"高","The cat **scratched** my arm when I tried to pick it up.（自編例句）","我想抱起那隻貓時，牠**抓**傷了我的手臂。",5],[192,"shade","n./v.",4,"陰涼處；色調","",4.16,"高","Let's sit in the **shade** of that tree to rest.（自編例句）","我們到那棵樹下的**陰涼處**休息吧。",5],[193,"sheriff","n.",5,"（美國郡）警長","",4.16,"高","The **sheriff** and his deputies arrested the thief.（自編例句）","**警長**和他的副手逮捕了小偷。",5],[194,"yield","v./n.",5,"出產；讓步","",4.16,"高","This farm **yields** two harvests of rice each year.（自編例句）","這座農場每年**出產**兩季稻米。",5],[195,"barrier","n.",4,"障礙；屏障","",4.15,"高","Language can be a **barrier** for people moving to a new country.（自編例句）","對於移居新國家的人來說，語言可能是一大**障礙**。",5],[196,"stake","n./v.",5,"利害關係；賭注；樁","",4.15,"高","Many people have a **stake** in the outcome of the election.（自編例句）","許多人與這場選舉的結果有**利害關係**。",6],[197,"tackle","v.",5,"處理；擒抱","",4.15,"高","The government must **tackle** the problem of air pollution.（自編例句）","政府必須**處理**空氣污染的問題。",6],[198,"torture","n./v.",4,"折磨；酷刑","",4.15,"高","Waiting for the exam results was pure **torture**.（自編例句）","等待考試結果簡直是一種**折磨**。",6],[199,"violation","n.",4,"違反；侵犯","violate",4.15,"高","Parking here is a **violation** of traffic rules.（自編例句）","在這裡停車**違反**交通規則。",6],[200,"workshop","n.",5,"研習會；工作坊","",4.15,"高","Our teachers attended a **workshop** on using AI in the classroom.（自編例句）","我們的老師參加了一場關於在課堂上使用AI的**研習會**。",6],[201,"abstract","adj.",4,"抽象的","",4.14,"高","It's hard for young children to understand **abstract** ideas like freedom.（自編例句）","年幼的孩子很難理解像自由這樣**抽象的**概念。",6],[202,"inspection","n.",4,"檢查；視察","inspect、inspector",4.14,"高","The restaurant passed the health **inspection**.（自編例句）","這家餐廳通過了衛生**檢查**。",6],[203,"intensity","n.",4,"強度；強烈","intense、intensive",4.14,"高","The **intensity** of the earthquake was so great that people all over the island felt it.（自編例句）","這場地震的**強度**很大，全島的人都感受得到。",6],[204,"judicial","adj.",5,"司法的","judge",4.14,"高","Taiwan's **judicial** system is independent of the executive branch.（自編例句）","臺灣的**司法**體系獨立於行政部門之外。",6],[205,"lean","v./adj.",4,"倚靠；傾斜；精瘦的","",4.14,"高","Don't **lean** against the door; it might open.（自編例句）","不要**靠**在門上，門可能會打開。",6],[206,"lecture","n./v.",4,"演講；講課","lecturer",4.14,"高","The professor gave a **lecture** on Taiwanese history.（自編例句）","教授發表了一場關於臺灣歷史的**演講**。",6],[207,"logical","adj.",4,"合乎邏輯的","logic",4.14,"高","There must be a **logical** explanation for what happened.（自編例句）","發生的事一定有**合乎邏輯的**解釋。",6],[208,"peer","n./v.",4,"同儕；凝視","",4.14,"高","Teenagers often feel **peer** pressure to dress like their friends.（自編例句）","青少年常感受到**同儕**壓力，想穿得和朋友一樣。",6],[209,"statistical","adj.",5,"統計的","statistics",4.14,"高","The report is based on **statistical** data from the past ten years.（自編例句）","這份報告是根據過去十年的**統計**資料。",6],[210,"tragedy","n.",4,"悲劇；慘事","tragic",4.14,"高","The fire was a terrible **tragedy** for the whole town.（自編例句）","那場火災對整個小鎮來說是一場可怕的**悲劇**。",6],[211,"companion","n.",4,"同伴；伴侶","",4.13,"高","The dog was the old man's only **companion**.（自編例句）","那隻狗是老人唯一的**同伴**。",6],[212,"consultant","n.",4,"顧問","consult",4.13,"高","The company hired a **consultant** to improve its marketing.（自編例句）","公司聘請了一位**顧問**來改善行銷。",6],[213,"guilt","n.",4,"罪惡感；有罪","guilty",4.13,"高","She felt a sense of **guilt** after lying to her mother.（自編例句）","對媽媽說謊之後，她有一種**罪惡感**。",6],[214,"helicopter","n.",4,"直升機","",4.13,"高","The injured climber was taken to the hospital by **helicopter**.（自編例句）","受傷的登山客被**直升機**送往醫院。",6],[215,"precise","adj.",4,"精確的；確切的","precision",4.13,"高","Can you give me the **precise** time the accident happened?（自編例句）","你能告訴我事故發生的**確切**時間嗎？",6],[216,"visa","n.",5,"簽證","",4.13,"高","You don't need a **visa** to visit Japan for a short trip.（自編例句）","短期去日本旅遊不需要**簽證**。",6],[217,"appreciation","n.",4,"感激；欣賞","appreciate",4.12,"高","The students gave their teacher a card to show their **appreciation**.（自編例句）","學生送老師一張卡片來表達**感激**。",6],[218,"entity","n.",5,"實體；存在物","",4.12,"高","The museum is now a separate legal **entity** from the city government.（自編例句）","這座博物館現在是獨立於市政府之外的法人**實體**。",6],[219,"journalism","n.",5,"新聞業；新聞學","journal、journalist",4.12,"高","She studied **journalism** in college and now works as a reporter.（自編例句）","她大學念**新聞**系，現在是一名記者。",6],[220,"reminder","n.",5,"提醒；提醒物","remind",4.12,"高","My phone sent me a **reminder** about the meeting.（自編例句）","我的手機傳來一則開會的**提醒**。",6],[221,"ridge","n./v.",5,"山脊；隆起","",4.12,"高","We hiked along the mountain **ridge** and enjoyed the view.（自編例句）","我們沿著**山脊**健行，欣賞風景。",6],[222,"variable","n./adj.",5,"多變的；變數","vary",4.12,"高","The weather in the mountains is highly **variable**.（自編例句）","山區的天氣非常**多變**。",6],[223,"alternate","adj./v./n.",5,"輪流的；交替","alternative",4.11,"高","The two teams use the field on **alternate** days.（自編例句）","兩隊隔天**輪流**使用球場。",6],[224,"diplomatic","adj.",5,"外交的；圓滑的","diplomat",4.11,"高","The two countries cut off **diplomatic** relations.（自編例句）","兩國斷絕了**外交**關係。",6],[225,"grip","n./v.",5,"緊握；掌控","",4.11,"高","Keep a firm **grip** on the rope and don't let go.（自編例句）","**緊握**住繩子，不要放手。",6],[226,"pathetic","adj.",5,"可悲的；可憐的","",4.11,"高","His excuse for being late was **pathetic**; nobody believed a word of it.（自編例句）","他遲到的藉口真是**可悲**，沒有人相信半個字。",6],[227,"proportion","n./v.",5,"比例；比率","",4.11,"高","A large **proportion** of students in this school take the bus.（自編例句）","這所學校有很高**比例**的學生搭公車上學。",6],[228,"throne","n.",5,"王位；寶座","",4.11,"高","The prince took the **throne** after his father died.（自編例句）","父親去世後，王子繼承了**王位**。",6],[229,"witch","n.",4,"女巫","",4.11,"高","In the story, a **witch** turns the prince into a frog.（自編例句）","故事中，一個**女巫**把王子變成了青蛙。",6],[230,"ally","n./v.",5,"盟友；同盟國","alliance",4.1,"高","The United States is an important **ally** of Japan.（自編例句）","美國是日本重要的**盟友**。",6],[231,"citizenship","n.",5,"公民身分；國籍","citizen",4.1,"高","She was born in Canada, so she has Canadian **citizenship**.（自編例句）","她在加拿大出生，所以擁有加拿大**國籍**。",6],[232,"cliff","n.",4,"懸崖","",4.1,"高","The lighthouse stands at the edge of a high **cliff**.（自編例句）","燈塔矗立在高高的**懸崖**邊。",6],[233,"hurricane","n.",4,"颶風","",4.1,"高","The **hurricane** destroyed hundreds of homes along the coast.（自編例句）","**颶風**摧毀了沿岸數百棟房屋。",6],[234,"rental","n.",5,"租金；租賃","rent",4.1,"高","The **rental** for this car is 2,000 dollars a day.（自編例句）","這輛車一天的**租金**是兩千元。",6],[235,"lawsuit","n.",5,"訴訟","",4.09,"高","The family filed a **lawsuit** against the factory for polluting the river.（自編例句）","這家人對那間污染河川的工廠提起**訴訟**。",7],[236,"passionate","adj.",5,"熱情的；熱衷的","passion",4.09,"高","He is **passionate** about protecting wild animals.（自編例句）","他**熱衷**於保護野生動物。",7],[237,"recommendation","n.",5,"推薦；建議","recommend",4.09,"高","I bought this book on my teacher's **recommendation**.（自編例句）","我是因為老師的**推薦**才買這本書的。",7],[238,"skull","n.",5,"頭骨","",4.09,"高","The scientists found a dinosaur **skull** in the desert.（自編例句）","科學家在沙漠中發現了一個恐龍**頭骨**。",7],[239,"slot","n./v.",5,"投幣口；時段","",4.09,"高","Put a coin in the **slot** and press the button.（自編例句）","把硬幣投進**投幣口**，再按下按鈕。",7],[240,"smash","v./n.",5,"打碎；猛擊","",4.09,"高","The ball flew through the window and **smashed** the glass.（自編例句）","球飛過窗戶，**打碎**了玻璃。",7],[241,"surrender","v./n.",4,"投降；放棄","",4.09,"高","The soldiers were forced to **surrender** after running out of food.（自編例句）","士兵們在糧食耗盡後被迫**投降**。",7],[242,"basin","n.",4,"盆地；臉盆","",4.08,"高","Taipei is located in a **basin**, so it gets very hot in summer.（自編例句）","台北位在**盆地**，所以夏天非常炎熱。",7],[243,"comparable","adj.",5,"可比較的；相當的","compare、comparison",4.08,"高","The two phones are **comparable** in price and quality.（自編例句）","這兩支手機的價格和品質**相當**。",7],[244,"fabulous","adj.",5,"極好的；很棒的","",4.08,"高","We had a **fabulous** time at the beach.（自編例句）","我們在海邊度過了一段**很棒的**時光。",7],[245,"glorious","adj.",4,"光榮的；壯麗的","glory",4.08,"高","It was a **glorious** day for our team when we won the championship.（自編例句）","贏得冠軍的那天對我們隊來說是**光榮的**一天。",7],[246,"grief","n.",4,"悲痛；悲傷","grieve",4.08,"高","She was filled with **grief** after her dog died.（自編例句）","她的狗死了之後，她非常**悲痛**。",7],[247,"inevitable","adj.",5,"不可避免的","",4.08,"高","Change is **inevitable**, so we should learn to accept it.（自編例句）","改變是**不可避免的**，所以我們應該學著接受。",7],[248,"myth","n.",5,"神話；迷思","mythology",4.08,"高","It's a **myth** that eating carrots will make you see in the dark.（自編例句）","吃紅蘿蔔就能在黑暗中看見東西，這是一個**迷思**。",7],[249,"rebel","n./v.",4,"叛軍；反抗","rebellion",4.08,"高","The **rebels** took control of the capital city.（自編例句）","**叛軍**控制了首都。",7],[250,"warehouse","n./v.",5,"倉庫","",4.08,"高","The online store keeps its products in a huge **warehouse**.（自編例句）","這家網路商店把商品存放在一座巨大的**倉庫**裡。",7],[251,"administrator","n.",5,"管理員；行政人員","administration",4.07,"高","Please contact the system **administrator** if you forget your password.（自編例句）","如果忘記密碼，請聯絡系統**管理員**。",7],[252,"curse","n./v.",4,"詛咒；咒罵","",4.07,"高","The old woman put a **curse** on the castle.（自編例句）","老婦人對城堡下了**詛咒**。",7],[253,"nomination","n.",5,"提名","nominate",4.07,"高","The movie received five Oscar **nominations**.（自編例句）","這部電影獲得五項奧斯卡**提名**。",7],[254,"obligation","n.",5,"義務；責任","oblige",4.07,"高","Parents have a legal **obligation** to send their children to school.（自編例句）","父母有送孩子上學的法律**義務**。",7],[255,"petty","adj.",5,"瑣碎的；小氣的","",4.07,"高","Don't argue with your friends over **petty** things.（自編例句）","不要為了**瑣碎的**小事和朋友爭吵。",7],[256,"assure","v.",4,"向…保證；使確信","",4.06,"高","I **assure** you that your secret is safe with me.（自編例句）","我向你**保證**，我會保守你的祕密。",7],[257,"compact","adj./n./v.",5,"小巧的；緊密的","",4.06,"高","This **compact** camera can fit in your pocket.（自編例句）","這台**小巧的**相機可以放進口袋。",7],[258,"deficit","n.",5,"赤字；不足","",4.06,"高","The government is trying to reduce the budget **deficit**.（自編例句）","政府正設法減少預算**赤字**。",7],[259,"demonstration","n.",4,"示範；示威","demonstrate",4.06,"高","The teacher gave a **demonstration** of how to use the machine.（自編例句）","老師**示範**了如何使用這台機器。",7],[260,"presumably","adv.",5,"大概；推測起來","presume",4.06,"高","The shop is closed, **presumably** because of the typhoon.（自編例句）","這家店沒開，**大概**是因為颱風的關係。",7],[261,"prosecution","n.",5,"檢方；起訴","prosecute、prosecutor",4.06,"高","The **prosecution** showed the jury a video of the crime.（自編例句）","**檢方**向陪審團播放了犯案過程的影片。",7],[262,"pulse","n./v.",5,"脈搏；節奏","",4.06,"高","The nurse checked my **pulse** and blood pressure.（自編例句）","護理師幫我量了**脈搏**和血壓。",7],[263,"rational","adj.",5,"理性的；合理的","irrational",4.06,"高","Try to stay calm and make a **rational** decision.（自編例句）","試著保持冷靜，做出**理性的**決定。",7],[264,"realm","n.",5,"領域；王國","",4.06,"高","Her research opened up a new **realm** of science.（自編例句）","她的研究開拓了科學的新**領域**。",7],[265,"spectacular","adj./n.",5,"壯觀的","",4.06,"高","We enjoyed a **spectacular** view of the fireworks from the hill.（自編例句）","我們從山上欣賞了**壯觀的**煙火。",7],[266,"tolerance","n.",4,"容忍；包容","tolerate、tolerant",4.06,"高","We should show **tolerance** toward people with different opinions.（自編例句）","我們應該對意見不同的人展現**包容**。",7],[267,"exceptional","adj.",5,"優異的；例外的","exception",4.05,"高","She is an **exceptional** student who always gets the highest grades.（自編例句）","她是一位**優異的**學生，總是拿到最高分。",7],[268,"graph","n./v.",4,"圖表；曲線圖","graphic",4.05,"高","The **graph** shows how the temperature changed over the year.（自編例句）","這張**圖表**顯示一年來氣溫的變化。",7],[269,"hatred","n.",4,"仇恨；憎恨","hate",4.05,"高","Wars often leave deep **hatred** between nations.（自編例句）","戰爭常在國家之間留下深刻的**仇恨**。",7],[270,"ignorant","adj.",4,"無知的；不知道的","ignore、ignorance",4.05,"高","Many people are **ignorant** of the dangers of smoking.（自編例句）","許多人**不知道**吸菸的危害。",7],[271,"sophisticated","adj.",5,"精密的；世故的","",4.05,"高","The factory uses **sophisticated** machines to make computer chips.（自編例句）","這間工廠使用**精密的**機器製造電腦晶片。",7],[272,"stance","n.",5,"立場；姿勢","",4.05,"高","The mayor made his **stance** on the issue very clear.（自編例句）","市長清楚表明他在這個議題上的**立場**。",7],[273,"thesis","n.",5,"論文；論點","",4.05,"高","She wrote her master's **thesis** on Taiwanese indigenous music.（自編例句）","她以臺灣原住民音樂為題撰寫碩士**論文**。",7],[274,"withdraw","v.",4,"撤退；提領","",4.05,"高","I need to **withdraw** some money from the ATM.（自編例句）","我需要從提款機**提**一些錢。",8],[275,"comply","v.",5,"遵守；服從","compliance",4.04,"高","All visitors must **comply** with the museum's rules.（自編例句）","所有參觀者都必須**遵守**博物館的規定。",8],[276,"ignorance","n.",4,"無知","ignorant",4.04,"高","His rude comments showed his **ignorance** of other cultures.（自編例句）","他無禮的言論顯示出他對其他文化的**無知**。",8],[277,"intermediate","adj./n./v.",4,"中級的；中間的","",4.04,"高","This English course is for **intermediate** learners.（自編例句）","這門英文課程是為**中級**學習者開設的。",8],[278,"meantime","n./adv.",5,"期間；同時","",4.04,"高","Dinner will be ready in an hour. In the **meantime**, you can do your homework.（自編例句）","晚餐一小時後就好，這段**期間**你可以先寫功課。",8],[279,"pipeline","n.",5,"管線","",4.04,"高","An oil **pipeline** runs under the sea between the two countries.（自編例句）","一條石油**管線**從兩國之間的海底穿過。",8],[280,"placement","n.",5,"分班；安置","",4.04,"高","All new students must take a **placement** test for English classes.（自編例句）","所有新生都必須參加英文課的**分班**測驗。",8],[281,"sketch","n./v.",4,"素描；草圖","",4.04,"高","The artist made a quick **sketch** of the old temple.（自編例句）","畫家快速畫了一張老廟宇的**素描**。",8],[282,"analyst","n.",5,"分析師","analyze、analysis",4.03,"高","Financial **analysts** expect the economy to grow next year.（自編例句）","金融**分析師**預期明年經濟會成長。",8],[283,"chapel","n.",5,"小教堂","",4.03,"高","The couple got married in a small **chapel** by the sea.（自編例句）","這對新人在海邊的一座**小教堂**結婚。",8],[284,"essence","n.",5,"本質；精華","essential",4.03,"高","The **essence** of good teaching is caring about students.（自編例句）","好的教學的**本質**在於關心學生。",8],[285,"orbit","n./v.",4,"軌道；繞…運行","",4.03,"高","The Earth takes one year to **orbit** the sun.（自編例句）","地球**繞**太陽**運行**一圈需要一年。",8],[286,"passive","adj.",4,"被動的；消極的","",4.03,"高","Don't just be a **passive** learner; ask questions in class.（自編例句）","不要只當個**被動的**學習者，上課要發問。",8],[287,"profitable","adj.",4,"賺錢的；有利潤的","profit",4.03,"高","The small shop has become very **profitable** since it started selling online.（自編例句）","自從開始網路銷售，這家小店變得非常**賺錢**。",8],[288,"ranch","n./v.",5,"牧場；大農場","",4.03,"高","Cows and horses are raised on the **ranch**.（自編例句）","這座**牧場**飼養牛和馬。",8],[289,"sentiment","n.",5,"情緒；看法","sentimental",4.03,"高","There is strong public **sentiment** against the new tax.（自編例句）","大眾對這項新稅普遍抱持反對的**情緒**。",8],[290,"threshold","n.",5,"門檻；起點","",4.03,"高","Students must reach a score **threshold** to enter the program.（自編例句）","學生必須達到分數**門檻**才能進入這個學程。",8],[291,"tin","n./v.",5,"錫；罐頭","",4.03,"高","The cookies come in a beautiful **tin** box.（自編例句）","餅乾裝在漂亮的**錫**盒裡。",8],[292,"verdict","n.",5,"裁決；判決","",4.03,"高","The jury reached a **verdict** after three days.（自編例句）","陪審團在三天後作出**裁決**。",8],[293,"arch","n./v.",4,"拱門；拱形","",4.02,"高","There is a stone **arch** at the entrance of the old town.（自編例句）","老城區入口有一座石造**拱門**。",8],[294,"bizarre","adj.",5,"怪異的；奇特的","",4.02,"高","He wore a **bizarre** costume made of newspapers.（自編例句）","他穿著一套用報紙做的**怪異**服裝。",8],[295,"consultation","n.",5,"諮詢；商量","consult、consultant",4.02,"高","You can book a free **consultation** with our doctor online.（自編例句）","你可以上網預約我們醫師的免費**諮詢**。",8],[296,"continental","adj.",5,"大陸的；洲的","continent",4.02,"高","The **continental** climate has hot summers and cold winters.（自編例句）","**大陸型**氣候夏天炎熱、冬天寒冷。",8],[297,"dignity","n.",4,"尊嚴","",4.02,"高","Everyone deserves to be treated with **dignity**.（自編例句）","每個人都應該受到有**尊嚴**的對待。",8],[298,"ego","n.",5,"自我；自尊心","",4.02,"高","Losing the game in front of his classmates hurt his **ego**.（自編例句）","在同學面前輸掉比賽，傷了他的**自尊心**。",8],[299,"ferry","n./v.",4,"渡輪","",4.02,"高","We took a **ferry** from Kaohsiung to Penghu.（自編例句）","我們從高雄搭**渡輪**到澎湖。",8],[300,"gut","n./v.",5,"直覺；腸子","",4.02,"高","My **gut** told me that something was wrong.（自編例句）","我的**直覺**告訴我有些不對勁。",8],[301,"liar","n.",4,"說謊者；騙子","lie",4.02,"高","Nobody believes him anymore because he is a **liar**.（自編例句）","再也沒有人相信他了，因為他是個愛**說謊**的人。",8],[302,"slam","n./v.",5,"猛關；猛擊","",4.02,"高","Please don't **slam** the door when you leave.（自編例句）","離開時請不要**用力關**門。",8],[303,"liquor","n.",4,"烈酒","",4.01,"高","Stores are not allowed to sell **liquor** to people under 18.（自編例句）","商店不得販售**烈酒**給未滿十八歲的人。",8],[304,"massage","n./v.",5,"按摩","",4.01,"高","My shoulders feel much better after the **massage**.（自編例句）","**按摩**之後，我的肩膀舒服多了。",8],[305,"salmon","n./adj.",5,"鮭魚","",4.01,"高","**Salmon** swim up rivers to lay their eggs.（自編例句）","**鮭魚**會逆流而上產卵。",8],[306,"sheer","adj./adv.",5,"完全的；陡峭的","",4.01,"高","It was **sheer** luck that nobody was hurt.（自編例句）","沒有人受傷**完全**是運氣好。",8],[307,"sympathy","n.",4,"同情","sympathetic、sympathize",4.01,"高","I have great **sympathy** for the people who lost their homes in the flood.（自編例句）","我非常**同情**在水災中失去家園的人。",8],[308,"theoretical","adj.",5,"理論的","theory",4.01,"高","The idea is possible in **theoretical** terms, but it's hard to do in real life.（自編例句）","這個想法在**理論**上可行，但在現實生活中很難做到。",8],[309,"voluntary","adj.",4,"自願的","volunteer",4.01,"高","Joining the school club is **voluntary**, not required.（自編例句）","參加學校社團是**自願的**，不是強制的。",8],[310,"acute","adj.",5,"急性的；敏銳的","",4.0,"高","He was taken to the hospital with **acute** stomach pain.（自編例句）","他因**急性**胃痛被送往醫院。",8],[311,"civic","adj.",5,"公民的；市民的","",4.0,"高","Voting is an important **civic** duty.（自編例句）","投票是一項重要的**公民**義務。",8],[312,"cottage","n.",4,"小屋；農舍","",4.0,"高","They rented a small **cottage** in the mountains for the summer.（自編例句）","他們夏天在山上租了一間**小屋**。",8],[313,"crude","adj.",5,"未加工的；粗糙的","",4.0,"高","Saudi Arabia exports large amounts of **crude** oil.（自編例句）","沙烏地阿拉伯出口大量的**原**油。",9],[314,"outlet","n.",5,"插座；出口；暢貨中心","",4.0,"高","Is there an electrical **outlet** near your desk?（自編例句）","你的書桌附近有**插座**嗎？",9],[315,"pledge","n./v.",5,"誓言；承諾","",4.0,"高","The company made a **pledge** to use only clean energy by 2030.（自編例句）","這家公司**承諾**在2030年前只使用潔淨能源。",9],[316,"publicity","n.",4,"宣傳；知名度","public、publicize",4.0,"高","The singer's new album got a lot of **publicity** on social media.（自編例句）","這位歌手的新專輯在社群媒體上獲得大量**宣傳**。",9],[317,"clause","n.",5,"條款；子句","",3.99,"中","Please read every **clause** of the contract carefully before you sign it.（自編例句）","簽約前請仔細閱讀合約的每一項**條款**。",9],[318,"cluster","n./v.",5,"一群；聚集","",3.99,"中","A **cluster** of small islands lies off the coast.（自編例句）","外海有一**群**小島。",9],[319,"denial","n.",5,"否認","deny",3.99,"中","Despite his **denial**, everyone knew he had taken the money.（自編例句）","儘管他**否認**，大家都知道是他拿了錢。",9],[320,"entrepreneur","n.",5,"企業家；創業者","",3.99,"中","The young **entrepreneur** started her own company at the age of 22.（自編例句）","這位年輕的**創業者**在二十二歲時創立了自己的公司。",9],[321,"freight","n./v.",5,"貨物；貨運","",3.99,"中","Most **freight** between Taiwan and Japan is carried by ship.（自編例句）","臺灣與日本之間的**貨物**大多靠船運送。",9],[322,"injection","n.",5,"注射；打針","inject",3.99,"中","The nurse gave the child an **injection** in the arm.（自編例句）","護理師替孩子的手臂**打針**。",9],[323,"insult","n./v.",4,"侮辱","",3.99,"中","Calling someone fat is an **insult**.（自編例句）","說別人胖是一種**侮辱**。",9],[324,"perfection","n.",4,"完美","perfect",3.99,"中","She practiced the song until she sang it to **perfection**.（自編例句）","她反覆練習這首歌，直到唱得**完美**無瑕。",9],[325,"successor","n.",5,"接班人；繼任者","succeed",3.99,"中","The company has chosen a **successor** for the retiring CEO.（自編例句）","公司已為即將退休的執行長選出**接班人**。",9],[326,"whatsoever","adj./pron.",5,"絲毫；任何","",3.99,"中","I have no idea **whatsoever** where he went.（自編例句）","我**絲毫**不知道他去了哪裡。",9],[327,"atomic","adj.",4,"原子的","atom",3.98,"中","Japan was attacked with **atomic** bombs in 1945.（自編例句）","日本在1945年遭到**原子**彈攻擊。",9],[328,"cocaine","n.",5,"古柯鹼","",3.98,"中","**Cocaine** is an illegal drug that is very harmful to the brain.（自編例句）","**古柯鹼**是一種對大腦極為有害的非法毒品。",9],[329,"cord","n.",4,"繩子；電線","",3.98,"中","Pull the **cord** to open the curtains.（自編例句）","拉一下**繩子**就能打開窗簾。",9],[330,"defendant","n.",5,"被告","defend",3.98,"中","The **defendant** said that he was innocent.（自編例句）","**被告**聲稱自己是無辜的。",9],[331,"dense","adj.",4,"密集的；茂密的","density",3.98,"中","The forest is so **dense** that sunlight can hardly get through.（自編例句）","這片森林**茂密**到陽光幾乎照不進來。",9],[332,"doctrine","n.",5,"教義；學說","",3.98,"中","The **doctrine** of the religion teaches love and kindness.（自編例句）","這個宗教的**教義**教導人們愛與仁慈。",9],[333,"freshman","n.",4,"新生；一年級生","",3.98,"中","As a **freshman**, she joined the school's English club.（自編例句）","身為**新生**，她加入了學校的英文社。",9],[334,"hydrogen","n.",4,"氫","",3.98,"中","Water is made of **hydrogen** and oxygen.（自編例句）","水是由**氫**和氧組成的。",9],[335,"intact","adj.",5,"完好無缺的；完整的","",3.98,"中","The old temple remained **intact** after the earthquake.（自編例句）","地震過後，那座老廟仍然**完好無缺**。",9],[336,"oval","adj./n.",4,"橢圓形的","",3.98,"中","The mirror has an **oval** shape.（自編例句）","這面鏡子是**橢圓**形的。",9],[337,"prophet","n.",5,"先知；預言家","prophecy",3.98,"中","People thought the old man was a **prophet** because his predictions came true.（自編例句）","人們認為那位老人是**先知**，因為他的預言都成真了。",9],[338,"capitalism","n.",4,"資本主義","capital、capitalist",3.97,"中","Under **capitalism**, most businesses are owned by private people.（自編例句）","在**資本主義**制度下，大多數企業為私人所有。",9],[339,"clash","n./v.",4,"衝突","",3.97,"中","There was a **clash** between the fans of the two teams after the game.（自編例句）","賽後兩隊球迷之間發生了**衝突**。",9],[340,"compatible","adj.",5,"相容的；合得來的","",3.97,"中","This app is not **compatible** with older phones.（自編例句）","這個應用程式和舊型手機不**相容**。",9],[341,"explosive","adj./n.",4,"炸藥；爆炸性的","explode、explosion",3.97,"中","The police found **explosives** in the car.（自編例句）","警方在車內發現了**炸藥**。",9],[342,"frontier","n.",5,"邊疆；新領域","",3.97,"中","Space is often called humanity's final **frontier**.（自編例句）","太空常被稱為人類最後的**邊疆**。",9],[343,"frustration","n.",4,"挫折感；挫敗","frustrate",3.97,"中","He shouted in **frustration** when his computer crashed again.（自編例句）","電腦又當機時，他**挫敗**地大叫。",9],[344,"incentive","n./adj.",5,"誘因；激勵","",3.97,"中","The company offers bonuses as an **incentive** for workers to do better.（自編例句）","公司提供獎金作為員工表現更好的**誘因**。",9],[345,"mandate","n.",5,"授權；命令","",3.97,"中","The new government has a clear **mandate** to fight corruption.（自編例句）","新政府獲得明確的**授權**去打擊貪腐。",9],[346,"memorable","adj.",4,"難忘的","memory",3.97,"中","Our trip to Hualien was the most **memorable** experience of the summer.（自編例句）","我們的花蓮之旅是這個夏天最**難忘的**經驗。",9],[347,"resign","v.",4,"辭職；放棄","resignation",3.97,"中","He decided to **resign** from his job to start his own business.（自編例句）","他決定**辭**去工作，自己創業。",9],[348,"therapist","n.",5,"治療師","therapy",3.97,"中","She sees a **therapist** once a week to talk about her stress.（自編例句）","她每週去看一次**治療師**，談談她的壓力。",9],[349,"tuition","n.",5,"學費","",3.97,"中","**Tuition** at private universities is much higher than at public ones.（自編例句）","私立大學的**學費**比公立大學高出許多。",9],[350,"tumor","n.",5,"腫瘤","",3.97,"中","The doctor found a small **tumor** in his lung.（自編例句）","醫生在他的肺部發現了一顆小**腫瘤**。",9],[351,"coincidence","n.",5,"巧合","coincide",3.96,"中","What a **coincidence**! We were born on the same day.（自編例句）","真是**巧合**！我們同一天出生。",10],[352,"comedian","n.",5,"喜劇演員","comedy",3.96,"中","The **comedian** made the whole audience laugh.（自編例句）","那位**喜劇演員**逗得全場觀眾哈哈大笑。",10],[353,"conscience","n.",4,"良心","",3.96,"中","He had a guilty **conscience** after he broke the window and ran away.（自編例句）","他打破窗戶逃走後，**良心**不安。",10],[354,"nominee","n.",5,"被提名人；入圍者","nominate、nomination",3.96,"中","She was one of the five **nominees** for Best Actress.（自編例句）","她是最佳女主角的五位**入圍者**之一。",10],[355,"pirate","n./v.",5,"海盜；盜版","piracy",3.96,"中","The ship was attacked by **pirates** near Somalia.（自編例句）","那艘船在索馬利亞附近遭到**海盜**攻擊。",10],[356,"superb","adj.",5,"一流的；極好的","",3.96,"中","The view from the top of the tower is **superb**.（自編例句）","從塔頂看出去的景色**一流**。",10],[357,"wit","n.",4,"機智；風趣","witty",3.96,"中","The speaker's **wit** kept the audience laughing.（自編例句）","講者的**風趣**讓觀眾笑聲不斷。",10],[358,"wreck","n./v.",4,"殘骸；毀壞","",3.96,"中","Divers found the **wreck** of an old ship at the bottom of the sea.（自編例句）","潛水員在海底發現一艘古船的**殘骸**。",10],[359,"ballet","n.",4,"芭蕾舞","",3.95,"中","She has taken **ballet** lessons since she was five.（自編例句）","她從五歲開始學**芭蕾舞**。",10],[360,"compassion","n.",5,"同情心；憐憫","compassionate",3.95,"中","The nurse treated every patient with **compassion**.（自編例句）","那位護理師以**同情心**對待每位病人。",10],[361,"feast","n./v.",4,"盛宴；大餐","",3.95,"中","We had a big **feast** to celebrate the Lunar New Year.（自編例句）","我們吃了一頓豐盛的**大餐**慶祝農曆新年。",10],[362,"frost","n./v.",4,"霜","",3.95,"中","The grass was covered with **frost** this morning.（自編例句）","今天早上草地上覆蓋著一層**霜**。",10],[363,"homeland","n.",4,"祖國；家鄉","",3.95,"中","Many refugees hope to return to their **homeland** one day.（自編例句）","許多難民希望有一天能回到**祖國**。",10],[364,"rhetoric","n.",5,"修辭；花言巧語","",3.95,"中","Voters want real action, not empty **rhetoric**.（自編例句）","選民想要的是實際行動，而不是空洞的**花言巧語**。",10],[365,"spouse","n.",5,"配偶","",3.95,"中","Employees and their **spouses** are invited to the year-end party.（自編例句）","員工和**配偶**都受邀參加尾牙。",10],[366,"tense","adj./v.",4,"緊張的；時態","tension",3.95,"中","Everyone felt **tense** while waiting for the results.（自編例句）","等待結果時，大家都很**緊張**。",10],[367,"wilderness","n.",5,"荒野","",3.95,"中","They spent a week camping in the **wilderness**.（自編例句）","他們在**荒野**中露營了一個星期。",10],[368,"idol","n.",4,"偶像","",3.94,"中","The pop singer is an **idol** to millions of teenagers.（自編例句）","這位流行歌手是數百萬青少年的**偶像**。",10],[369,"illusion","n.",5,"錯覺；假象","",3.94,"中","The lines look different in length, but it's just an optical **illusion**.（自編例句）","這些線看起來長度不同，但那只是視覺上的**錯覺**。",10],[370,"motive","n.",5,"動機","",3.94,"中","The police are still trying to find the **motive** for the crime.（自編例句）","警方仍在設法找出犯罪**動機**。",10],[371,"profound","adj.",5,"深遠的；深刻的","",3.94,"中","The book had a **profound** influence on my life.（自編例句）","這本書對我的人生有**深遠的**影響。",10],[372,"rebellion","n.",5,"叛亂；反抗","rebel",3.94,"中","The army quickly ended the **rebellion**.（自編例句）","軍隊很快就平定了**叛亂**。",10],[373,"recipient","n./adj.",5,"接受者；得主","",3.94,"中","She was the **recipient** of this year's teaching award.（自編例句）","她是今年教學獎的**得主**。",10],[374,"refund","n./v.",4,"退款","",3.94,"中","I returned the broken headphones and got a full **refund**.（自編例句）","我把壞掉的耳機拿去退貨，拿到全額**退款**。",10],[375,"swap","v./n.",5,"交換","",3.94,"中","Can I **swap** seats with you so I can sit next to my friend?（自編例句）","我可以和你**交換**座位嗎？這樣我就能坐在朋友旁邊。",10],[376,"virtue","n.",4,"美德","",3.94,"中","Patience is a **virtue**.（自編例句）","耐心是一種**美德**。",10],[377,"directory","n.",5,"名錄；電話簿","",3.93,"中","I looked up the restaurant's phone number in the **directory**.（自編例句）","我在**電話簿**裡查到那家餐廳的電話號碼。",10],[378,"ginger","n.",4,"薑","",3.93,"中","My mother adds **ginger** to the soup to keep us warm in winter.（自編例句）","冬天時，我媽媽會在湯裡加**薑**幫我們暖身。",10],[379,"mentor","n.",5,"導師；指導者","",3.93,"中","My English teacher has been a great **mentor** to me.（自編例句）","我的英文老師一直是我很好的**導師**。",10],[380,"overhead","adv./adj./n.",5,"在頭頂上；經常費用","",3.93,"中","A plane flew **overhead** as we were having a picnic.（自編例句）","我們野餐時，一架飛機從**頭頂上**飛過。",10],[381,"siege","n.",5,"圍攻；圍城","",3.93,"中","The city was under **siege** for six months.（自編例句）","這座城市被**圍攻**了六個月。",10],[382,"wizard","n.",4,"巫師；奇才","",3.93,"中","In the story, a **wizard** helps the young prince find the dragon.（自編例句）","故事中，一位**巫師**幫助年輕的王子找到龍。",10],[383,"competent","adj.",5,"稱職的；能幹的","competence",3.92,"中","She is a very **competent** nurse who stays calm in emergencies.（自編例句）","她是一位非常**稱職的**護理師，遇到緊急狀況也能保持冷靜。",10],[384,"debris","n.",5,"瓦礫；碎片","",3.92,"中","Workers spent days clearing **debris** after the typhoon.（自編例句）","颱風過後，工人花了好幾天清理**瓦礫**。",10],[385,"delegation","n.",5,"代表團；授權","delegate",3.92,"中","A **delegation** of students from Japan visited our school.（自編例句）","一個日本學生**代表團**參訪了我們學校。",10],[386,"donor","n.",5,"捐贈者","donate、donation",3.92,"中","The hospital needs more blood **donors**.（自編例句）","醫院需要更多血液**捐贈者**。",10],[387,"fierce","adj.",4,"激烈的；兇猛的","",3.92,"中","The competition for the scholarship is **fierce**.（自編例句）","這筆獎學金的競爭非常**激烈**。",10],[388,"gratitude","n.",4,"感激","grateful",3.92,"中","He wrote a letter to express his **gratitude** to the doctor.（自編例句）","他寫了一封信向醫生表達**感激**。",10],[389,"lounge","n./v.",5,"休息室；大廳","",3.92,"中","Passengers can wait in the airport **lounge** before boarding.（自編例句）","乘客登機前可以在機場的**休息室**等候。",11],[390,"mint","n.",5,"薄荷；鑄幣廠","",3.92,"中","This toothpaste has a fresh **mint** flavor.（自編例句）","這款牙膏有清新的**薄荷**味。",11],[391,"pasta","n.",4,"義大利麵","",3.92,"中","My favorite dish is **pasta** with tomato sauce.（自編例句）","我最喜歡的菜是番茄醬汁**義大利麵**。",11],[392,"theology","n.",5,"神學","",3.92,"中","He studied **theology** because he wanted to become a priest.（自編例句）","他研讀**神學**，因為他想成為神父。",11],[393,"batch","n.",5,"一批；一組","",3.91,"中","She baked a **batch** of cookies for the class party.（自編例句）","她為班級派對烤了一**批**餅乾。",11],[394,"catalogue","n./v.",4,"型錄；目錄","",3.91,"中","You can order anything in this **catalogue** online.（自編例句）","這本**型錄**裡的任何商品都可以上網訂購。",11],[395,"collector","n.",5,"收藏家；收集者","collect、collection",3.91,"中","He is a stamp **collector** with more than 5,000 stamps.（自編例句）","他是郵票**收藏家**，擁有五千多張郵票。",11],[396,"observer","n.",5,"觀察者；觀察員","observe、observation",3.91,"中","Two foreign **observers** watched the election to make sure it was fair.（自編例句）","兩位外國**觀察員**監督選舉，確保其公正。",11],[397,"prosperity","n.",4,"繁榮","prosper、prosperous",3.91,"中","The new port brought **prosperity** to the small town.（自編例句）","新港口為這個小鎮帶來了**繁榮**。",11],[398,"refuge","n.",5,"避難所；避難","refugee",3.91,"中","People took **refuge** in the school during the flood.（自編例句）","水災期間，民眾到學校**避難**。",11],[399,"sphere","n.",5,"球體；領域","atmosphere、hemisphere",3.91,"中","The Earth is not a perfect **sphere**.（自編例句）","地球並不是一個完美的**球體**。",11],[400,"suburban","adj.",5,"郊區的","suburb",3.91,"中","Many families moved to **suburban** areas to find bigger houses.（自編例句）","許多家庭搬到**郊區**，尋找更大的房子。",11],[401,"verbal","adj./n.",5,"口頭的；言語的","verb",3.91,"中","The two men had a **verbal** agreement but never signed a contract.（自編例句）","這兩人達成了**口頭**協議，但從未簽約。",11],[402,"chorus","n.",4,"合唱團；副歌","",3.9,"中","Everyone sang along when the song reached the **chorus**.（自編例句）","歌曲唱到**副歌**時，大家都跟著唱。",11],[403,"clarity","n.",5,"清楚；清晰","clarify、clear",3.9,"中","The teacher explained the rule with great **clarity**.（自編例句）","老師把規則解釋得非常**清楚**。",11],[404,"confidential","adj.",5,"機密的；保密的","confidence",3.9,"中","Please keep this information **confidential**.（自編例句）","請將這份資訊**保密**。",11],[405,"dome","n./v.",5,"圓頂；穹頂","",3.9,"中","The church has a beautiful golden **dome**.（自編例句）","這座教堂有一個美麗的金色**圓頂**。",11],[406,"hostage","n.",5,"人質","",3.9,"中","The robbers held three people **hostage** in the bank.（自編例句）","搶匪在銀行裡挾持了三名**人質**。",11],[407,"mortality","n.",5,"死亡率","mortal",3.9,"中","Better medical care has greatly reduced infant **mortality**.（自編例句）","更好的醫療照護大幅降低了嬰兒**死亡率**。",11],[408,"rack","n./v.",5,"架子；折磨","",3.9,"中","Please put your shoes on the shoe **rack**.（自編例句）","請把鞋子放在鞋**架**上。",11],[409,"rejection","n.",4,"拒絕","reject",3.9,"中","She was not discouraged by the **rejection** letter from the company.（自編例句）","她沒有因為那家公司的**拒絕**信而灰心。",11],[410,"scrap","n./v.",5,"小片；廢料","",3.9,"中","She wrote the phone number on a **scrap** of paper.（自編例句）","她把電話號碼寫在一**小片**紙上。",11],[411,"shuttle","n./v.",5,"接駁車；太空梭","",3.9,"中","The hotel offers a free **shuttle** to the airport.（自編例句）","這家飯店提供前往機場的免費**接駁車**。",11],[412,"unlock","v.",5,"解鎖","",3.9,"中","Use your fingerprint to **unlock** the phone.（自編例句）","用指紋**解鎖**手機。",11],[413,"adverse","adj.",5,"不良的；不利的","",3.89,"中","The medicine may have some **adverse** effects.（自編例句）","這種藥可能會有一些**不良**副作用。",11],[414,"biography","n.",4,"傳記","",3.89,"中","I'm reading a **biography** of Steve Jobs.（自編例句）","我正在讀賈伯斯的**傳記**。",11],[415,"destructive","adj.",5,"破壞性的","destroy、destruction",3.89,"中","The typhoon was one of the most **destructive** storms in years.（自編例句）","這次颱風是多年來最具**破壞性**的暴風之一。",11],[416,"farewell","n.",4,"告別；歡送","",3.89,"中","We held a **farewell** party for our retiring principal.（自編例句）","我們為即將退休的校長舉辦了一場**歡送**會。",11],[417,"heir","n.",5,"繼承人","",3.89,"中","The prince is the **heir** to the throne.（自編例句）","王子是王位的**繼承人**。",11],[418,"landlord","n.",5,"房東；地主","",3.89,"中","Our **landlord** raised the rent again this year.（自編例句）","我們的**房東**今年又漲房租了。",11],[419,"midst","n./prep.",5,"當中；中間","",3.89,"中","In the **midst** of the crisis, the city stayed calm.（自編例句）","在危機**當中**，這座城市依然保持冷靜。",11],[420,"nursery","n.",4,"托兒所；苗圃","",3.89,"中","She takes her son to the **nursery** before going to work.（自編例句）","她上班前先送兒子去**托兒所**。",11],[421,"choir","n.",5,"唱詩班；合唱團","",3.88,"中","She sings in the church **choir** every Sunday.（自編例句）","她每週日都在教會的**唱詩班**唱歌。",11],[422,"corridor","n.",5,"走廊","",3.88,"中","Please don't run in the **corridor**.（自編例句）","請不要在**走廊**上奔跑。",11],[423,"credibility","n.",5,"可信度","credible",3.88,"中","The news website lost its **credibility** after publishing false reports.（自編例句）","這家新聞網站刊登假新聞後失去了**可信度**。",11],[424,"haul","v./n.",5,"拖運；拉","",3.88,"中","They used a truck to **haul** the old furniture away.（自編例句）","他們用卡車把舊家具**運**走。",11],[425,"juvenile","adj./n.",5,"青少年的；少年","",3.88,"中","The **juvenile** court handles cases involving people under 18.（自編例句）","**少年**法庭處理涉及未滿十八歲者的案件。",11],[426,"backyard","n.",5,"後院","",3.87,"中","We grow tomatoes in our **backyard**.（自編例句）","我們在**後院**種番茄。",11],[427,"economist","n.",4,"經濟學家","economy、economic",3.87,"中","Many **economists** believe prices will keep rising.（自編例句）","許多**經濟學家**認為物價會繼續上漲。",12],[428,"hypothesis","n.",5,"假設","",3.87,"中","The scientist did an experiment to test her **hypothesis**.（自編例句）","科學家做了一項實驗來驗證她的**假設**。",12],[429,"maturity","n.",4,"成熟","mature",3.87,"中","She showed great **maturity** for a girl of her age.（自編例句）","以她的年紀來說，她表現得非常**成熟**。",12],[430,"surplus","n./adj.",5,"過剩；盈餘","",3.87,"中","The farmers sold their **surplus** rice to other countries.（自編例句）","農民把**過剩**的稻米賣到其他國家。",12],[431,"autonomy","n.",5,"自主權；自治","",3.86,"中","Universities should have **autonomy** in choosing what to teach.（自編例句）","大學在決定教學內容上應擁有**自主權**。",12],[432,"carnival","n.",5,"嘉年華；狂歡節","",3.86,"中","The town holds a **carnival** every spring with music and parades.（自編例句）","這個小鎮每年春天都會舉辦有音樂和遊行的**嘉年華**。",12],[433,"commodity","n.",5,"商品；日用品","",3.86,"中","Oil is one of the most important **commodities** in the world.（自編例句）","石油是全世界最重要的**商品**之一。",12],[434,"congressman","n.",5,"（美國）國會議員","congress",3.86,"中","The **congressman** visited the flooded area to see the damage.（自編例句）","那位**國會議員**前往水災區視察災情。",12],[435,"correlation","n.",5,"關聯；相關性","",3.86,"中","Studies show a strong **correlation** between sleep and memory.（自編例句）","研究顯示睡眠與記憶之間有很強的**關聯**。",12],[436,"correspondent","n.",5,"特派員；通訊記者","correspond",3.86,"中","She works as a foreign **correspondent** in Tokyo for a Taiwanese newspaper.（自編例句）","她是一家臺灣報社駐東京的**特派員**。",12],[437,"dough","n.",5,"麵團","",3.86,"中","Knead the **dough** for ten minutes before baking.（自編例句）","烘烤前先把**麵團**揉十分鐘。",12],[438,"instinct","n.",4,"本能；直覺","instinctive",3.86,"中","Birds know how to build nests by **instinct**.（自編例句）","鳥類天生就知道怎麼築巢，這是**本能**。",12],[439,"irony","n.",5,"諷刺；反諷","ironic",3.86,"中","The **irony** is that the fire station burned down.（自編例句）","**諷刺**的是，消防局竟然被燒毀了。",12],[440,"morality","n.",5,"道德","moral",3.86,"中","The story teaches children about **morality** and kindness.（自編例句）","這個故事教導孩子**道德**與善良。",12],[441,"pickup","n.",5,"小貨車；接送","",3.86,"中","My uncle drives a **pickup** truck to carry fruit to the market.（自編例句）","我舅舅開著**小貨車**載水果到市場。",12],[442,"sovereignty","n.",5,"主權","sovereign",3.86,"中","Every nation has the right to protect its **sovereignty**.（自編例句）","每個國家都有權捍衛自己的**主權**。",12],[443,"thrust","v./n.",5,"猛推；插入","",3.86,"中","He **thrust** his hands into his pockets to keep them warm.（自編例句）","他把雙手**插**進口袋保暖。",12],[444,"allowance","n.",4,"零用錢；津貼","allow",3.85,"中","My parents give me a weekly **allowance** of 500 dollars.（自編例句）","我爸媽每週給我五百元**零用錢**。",12],[445,"clarify","v.",4,"澄清；說明清楚","clarity、clear",3.85,"中","Could you **clarify** what you mean by \"soon\"?（自編例句）","你能**說明清楚**你說的「很快」是什麼意思嗎？",12],[446,"constitute","v.",4,"構成；占","constitution",3.85,"中","Women **constitute** more than half of the school's teachers.（自編例句）","女性**占**了學校教師的一半以上。",12],[447,"diagram","n./v.",4,"示意圖；圖解","",3.85,"中","The teacher drew a **diagram** to show how the heart works.（自編例句）","老師畫了一張**示意圖**來說明心臟如何運作。",12],[448,"porch","n.",5,"門廊","",3.85,"中","My grandmother likes to sit on the front **porch** in the evening.（自編例句）","我奶奶傍晚喜歡坐在前面的**門廊**上。",12],[449,"undergraduate","n.",5,"大學部學生；大學部","graduate",3.85,"中","The university has about 10,000 **undergraduate** students.（自編例句）","這所大學大約有一萬名**大學部**學生。",12],[450,"creep","v.",4,"悄悄移動；爬行","",3.84,"中","The cat **crept** quietly toward the bird.（自編例句）","那隻貓**悄悄**地朝鳥靠近。",12],[451,"exile","n./v.",5,"流亡；流放","",3.84,"中","The writer lived in **exile** in France for twenty years.（自編例句）","那位作家在法國**流亡**了二十年。",12],[452,"genetics","n.",5,"遺傳學","gene、genetic",3.84,"中","Thanks to **genetics**, we know why children look like their parents.（自編例句）","多虧了**遺傳學**，我們知道孩子為什麼長得像父母。",12],[453,"grill","n./v.",5,"燒烤；烤架","",3.84,"中","We **grilled** some meat and corn at the barbecue.（自編例句）","我們在烤肉時**烤**了一些肉和玉米。",12],[454,"testify","v.",5,"作證；證明","testimony",3.84,"中","Three people **testified** that they had seen the accident.（自編例句）","有三個人**作證**說他們看到了這場意外。",12],[455,"afterward","adv.",5,"之後；後來","",3.83,"中","We watched a movie and went out for dinner **afterward**.（自編例句）","我們看了一場電影，**之後**出去吃晚餐。",12],[456,"applause","n.",5,"掌聲；鼓掌","applaud",3.83,"中","The audience gave the singer a big round of **applause**.（自編例句）","觀眾給了那位歌手熱烈的**掌聲**。",12],[457,"bald","adj.",4,"禿頭的","",3.83,"中","My father started going **bald** in his thirties.（自編例句）","我爸爸三十幾歲就開始**禿頭**。",12],[458,"discourse","n.",5,"論述；談話","",3.83,"中","Social media has changed political **discourse** in many countries.（自編例句）","社群媒體改變了許多國家的政治**論述**。",12],[459,"exploit","v./n.",5,"剝削；利用","exploitation",3.83,"中","Some factories **exploit** workers by paying them very little.（自編例句）","有些工廠以極低的工資**剝削**工人。",12],[460,"investigator","n.",5,"調查員","investigate、investigation",3.83,"中","Police **investigators** are looking into the cause of the fire.（自編例句）","警方的**調查員**正在追查起火原因。",12],[461,"missionary","n./adj.",5,"傳教士；傳教的","mission",3.83,"中","The hospital was built by a Canadian **missionary** more than 100 years ago.（自編例句）","這家醫院是一百多年前由一位加拿大**傳教士**建立的。",12],[462,"shave","v./n.",4,"刮鬍子；剃","",3.83,"中","My father **shaves** every morning before work.（自編例句）","我爸爸每天早上上班前都會**刮鬍子**。",12],[463,"vicious","adj.",5,"兇惡的；惡毒的","",3.83,"中","The **vicious** dog bit a boy on the leg.（自編例句）","那隻**兇惡的**狗咬了一個男孩的腿。",12],[464,"athletics","n.",5,"田徑運動；體育運動","athlete",3.82,"中","He won three gold medals in **athletics** at the school sports day.（自編例句）","他在校慶運動會的**田徑**項目中拿下三面金牌。",12],[465,"certainty","n.",5,"確定；必然的事","certain",3.82,"中","I can say with **certainty** that he will win.（自編例句）","我可以**確定**地說他會贏。",13],[466,"confess","v.",4,"坦白；招認","confession",3.82,"中","The boy finally **confessed** that he had broken the vase.（自編例句）","那個男孩終於**坦白**是他打破了花瓶。",13],[467,"cube","n./v.",4,"方塊；立方體","",3.82,"中","Put some ice **cubes** in your drink.（自編例句）","在你的飲料裡放幾個冰**塊**。",13],[468,"deliberate","adj./v.",5,"蓄意的；深思熟慮的","deliberately",3.82,"中","It was not an accident; it was a **deliberate** attack.（自編例句）","那不是意外，而是一次**蓄意的**攻擊。",13],[469,"despair","n./v.",5,"絕望","",3.82,"中","After losing his job, he fell into **despair**.（自編例句）","失業後，他陷入了**絕望**。",13],[470,"dye","n./v.",4,"染色；染料","",3.82,"中","She **dyed** her hair red for the school festival.（自編例句）","她為了校慶把頭髮**染**成紅色。",13],[471,"murderer","n.",4,"殺人兇手","murder",3.82,"中","The police finally caught the **murderer** after two years.（自編例句）","兩年後，警方終於逮到了**殺人兇手**。",13],[472,"pier","n.",5,"碼頭；橋墩","",3.82,"中","We watched the sunset from the end of the **pier**.（自編例句）","我們在**碼頭**盡頭欣賞夕陽。",13],[473,"premise","n.",5,"前提","",3.82,"中","The whole argument is based on a false **premise**.（自編例句）","整個論點建立在一個錯誤的**前提**上。",13],[474,"revision","n.",4,"修改；複習","revise",3.82,"中","I need to make some **revisions** to my essay before I hand it in.（自編例句）","我交作文前需要做一些**修改**。",13],[475,"unprecedented","adj.",5,"史無前例的","",3.82,"中","The pandemic caused **unprecedented** changes to our daily lives.（自編例句）","疫情對我們的日常生活造成了**史無前例的**改變。",13],[476,"yacht","n./v.",5,"遊艇","",3.82,"中","The billionaire owns a huge **yacht**.（自編例句）","那位億萬富翁擁有一艘巨大的**遊艇**。",13],[477,"competitor","n.",4,"競爭者；參賽者","compete、competition",3.81,"中","Our company is facing pressure from foreign **competitors**.（自編例句）","我們公司正面臨來自國外**競爭者**的壓力。",13],[478,"hawk","n.",4,"老鷹；鷹派","",3.81,"中","A **hawk** was flying high above the field, looking for mice.（自編例句）","一隻**老鷹**在田野上空高飛，尋找老鼠。",13],[479,"honorable","adj.",5,"正直的；可敬的","honor",3.81,"中","He made the **honorable** choice to tell the truth.（自編例句）","他做了**正直的**選擇，說出了真相。",13],[480,"masterpiece","n.",5,"傑作","",3.81,"中","The \"Mona Lisa\" is a **masterpiece** by Leonardo da Vinci.（自編例句）","《蒙娜麗莎》是達文西的**傑作**。",13],[481,"sympathetic","adj.",4,"體諒的；同情的","sympathy",3.81,"中","My teacher was very **sympathetic** when I told her about my problems.（自編例句）","我把我的問題告訴老師時，她非常**體諒**我。",13],[482,"coffin","n.",5,"棺材","",3.8,"中","The **coffin** was carried into the church.（自編例句）","**棺材**被抬進了教堂。",13],[483,"communism","n.",5,"共產主義","communist",3.8,"中","**Communism** is a political system in which the state controls the economy.（自編例句）","**共產主義**是一種由國家控制經濟的政治制度。",13],[484,"conductor","n.",4,"指揮；列車長","conduct",3.8,"中","The **conductor** raised his baton and the orchestra began to play.（自編例句）","**指揮**舉起指揮棒，管弦樂團便開始演奏。",13],[485,"epidemic","n./adj.",5,"流行病；疫情","",3.8,"中","The flu **epidemic** forced many schools to close.（自編例句）","流感**疫情**迫使許多學校停課。",13],[486,"tick","n./v.",5,"打勾；滴答聲","",3.8,"中","Please **tick** the box if you agree.（自編例句）","如果你同意，請在方框內**打勾**。",13],[487,"bulletin","n.",4,"公告；新聞快報","",3.79,"中","The exam schedule is posted on the school **bulletin** board.（自編例句）","考試時間表張貼在學校的**公告**欄上。",13],[488,"capitalist","n.",4,"資本家；資本主義的","capitalism",3.79,"中","The factory was owned by a rich **capitalist**.（自編例句）","那間工廠為一名富有的**資本家**所有。",13],[489,"cooperate","v.",4,"合作","cooperation",3.79,"中","The two schools **cooperated** to hold a science fair.（自編例句）","兩所學校**合作**舉辦了一場科展。",13],[490,"counselor","n.",5,"輔導老師；顧問","counsel",3.79,"中","If you have trouble at school, you can talk to the school **counselor**.（自編例句）","如果你在學校遇到困難，可以找學校的**輔導老師**談談。",13],[491,"imaginary","adj.",4,"想像的；虛構的","imagine、imagination",3.79,"中","When she was little, she had an **imaginary** friend named Lulu.（自編例句）","她小時候有一個名叫露露的**想像**中的朋友。",13],[492,"mechanic","n.",4,"修車師傅；技工","mechanical",3.79,"中","The **mechanic** said my car needs new brakes.（自編例句）","**修車師傅**說我的車需要換新的煞車。",13],[493,"neglect","n./v.",4,"忽視；疏於照顧","negligence",3.79,"中","The old house fell apart after years of **neglect**.（自編例句）","這棟老房子多年**疏於照顧**，已經破敗不堪。",13],[494,"pitcher","n.",5,"投手；水壺","",3.79,"中","The **pitcher** threw the ball at 150 kilometers per hour.（自編例句）","**投手**以時速一百五十公里投出這顆球。",13],[495,"prejudice","n./v.",5,"偏見","",3.79,"中","We should not judge people based on **prejudice**.（自編例句）","我們不應該根據**偏見**來評斷別人。",13],[496,"projection","n.",5,"預測；投影","project",3.79,"中","The company's sales **projections** for next year look good.（自編例句）","公司對明年的銷售**預測**看起來不錯。",13],[497,"spokesman","n.",5,"發言人","",3.79,"中","A **spokesman** for the airline said the flight was canceled because of the weather.（自編例句）","航空公司**發言人**表示，該班機因天候因素取消。",13],[498,"stall","n./v.",5,"攤位；拖延","",3.79,"中","My aunt runs a fruit **stall** at the night market.（自編例句）","我阿姨在夜市經營一個水果**攤**。",13],[499,"foam","n./v.",4,"泡沫","",3.78,"中","The **foam** on top of the coffee looked like a heart.（自編例句）","咖啡上的**泡沫**看起來像一顆愛心。",13],[500,"forge","v.",5,"偽造；鍛造","",3.78,"中","The man was arrested for **forging** his boss's signature.（自編例句）","那名男子因**偽造**老闆的簽名而被捕。",13],[501,"negotiation","n.",5,"談判；協商","negotiate",3.78,"中","After weeks of **negotiation**, the two sides finally reached an agreement.（自編例句）","經過數週的**談判**，雙方終於達成協議。",13],[502,"specify","v.",5,"明確指出；詳細說明","specific",3.78,"中","The rules **specify** that students must wear uniforms.（自編例句）","規定**明確指出**學生必須穿制服。",13],[503,"conquer","v.",4,"克服；征服","conquest",3.77,"中","She finally **conquered** her fear of speaking in public.（自編例句）","她終於**克服**了對公開演講的恐懼。",14],[504,"delightful","adj.",4,"令人愉快的","delight",3.77,"中","We spent a **delightful** afternoon at the lake.（自編例句）","我們在湖邊度過了一個**愉快的**下午。",14],[505,"herb","n.",5,"香草；藥草","herbal",3.77,"中","She grows **herbs** like basil and mint on her balcony.（自編例句）","她在陽台上種了羅勒、薄荷等**香草**。",14],[506,"interval","n.",5,"間隔；中場休息","",3.77,"中","The buses leave at ten-minute **intervals**.（自編例句）","公車以十分鐘的**間隔**發車。",14],[507,"scar","n./v.",5,"疤痕","",3.77,"中","He has a small **scar** on his chin from a bike accident.（自編例句）","他下巴有一道騎腳踏車出意外留下的小**疤痕**。",14],[508,"seminar","n.",5,"研討會；專題討論課","",3.77,"中","Our class will attend a **seminar** on climate change next week.（自編例句）","我們班下週要參加一場關於氣候變遷的**研討會**。",14],[509,"stereo","n.",4,"音響；立體聲","",3.77,"中","He turned up the **stereo** to listen to his favorite song.（自編例句）","他把**音響**開大聲，聽他最喜歡的歌。",14],[510,"vein","n.",5,"靜脈；血管","",3.77,"中","The nurse took blood from a **vein** in my arm.（自編例句）","護理師從我手臂的**靜脈**抽血。",14],[511,"accountant","n.",4,"會計師","account",3.76,"中","My mother works as an **accountant** for a bank.（自編例句）","我媽媽在一家銀行擔任**會計師**。",14],[512,"calculation","n.",4,"計算","calculate",3.76,"中","According to my **calculations**, we'll arrive at about six.（自編例句）","根據我的**計算**，我們大約六點會到。",14],[513,"cane","n.",4,"拐杖；甘蔗","",3.76,"中","My grandfather walks with a **cane**.（自編例句）","我爺爺拄著**拐杖**走路。",14],[514,"diploma","n.",4,"畢業證書；文憑","",3.76,"中","She received her high school **diploma** last June.（自編例句）","她去年六月拿到了高中**畢業證書**。",14],[515,"volcano","n.",5,"火山","volcanic",3.76,"中","The **volcano** erupted and covered the town in ash.（自編例句）","**火山**爆發，灰燼覆蓋了整個小鎮。",14],[516,"butcher","n./v.",5,"肉販；屠夫","",3.75,"中","My mother buys pork from the **butcher** at the market.（自編例句）","我媽媽在市場向**肉販**買豬肉。",14],[517,"conception","n.",5,"概念；構想","conceive、concept",3.75,"中","He has no **conception** of how hard the job is.（自編例句）","他對這份工作有多辛苦完全沒有**概念**。",14],[518,"merge","v.",5,"合併；融合","merger",3.75,"中","The two companies **merged** to form a larger one.（自編例句）","兩家公司**合併**成一家更大的公司。",14],[519,"naive","adj.",5,"天真的","",3.75,"中","It was **naive** of me to believe everything he said.（自編例句）","我竟然相信他說的每一句話，實在太**天真**了。",14],[520,"perfume","n./v.",4,"香水","",3.75,"中","She bought a bottle of French **perfume** for her mother.（自編例句）","她為媽媽買了一瓶法國**香水**。",14],[521,"splendid","adj.",4,"壯麗的；極好的","splendor",3.75,"中","We had a **splendid** view of the mountains from our hotel room.（自編例句）","從飯店房間可以看到**壯麗的**山景。",14],[522,"arrogant","adj.",5,"傲慢的","arrogance",3.74,"中","He became **arrogant** after he became famous.（自編例句）","他成名後變得很**傲慢**。",14],[523,"contempt","n.",5,"輕視；輕蔑","",3.74,"中","She looked at him with **contempt**.（自編例句）","她用**輕蔑**的眼神看著他。",14],[524,"jealousy","n.",4,"嫉妒","jealous",3.74,"中","She couldn't hide her **jealousy** when her friend won the prize.（自編例句）","朋友得獎時，她無法掩飾內心的**嫉妒**。",14],[525,"torch","n./v.",5,"火炬；火把","",3.74,"中","The Olympic **torch** was carried through the city.（自編例句）","奧運**火炬**傳遞經過這座城市。",14],[526,"vain","adj.",4,"徒勞的；自負的","",3.74,"中","We tried in **vain** to stop the water from coming in.（自編例句）","我們試圖阻止水灌進來，但**徒勞**無功。",14],[527,"worthwhile","adj.",5,"值得的","",3.74,"中","Volunteering at the hospital was a **worthwhile** experience.（自編例句）","在醫院當志工是一次很**值得的**經驗。",14],[528,"bankrupt","adj./v./n.",4,"破產的","bankruptcy",3.73,"中","The company went **bankrupt** after losing money for years.（自編例句）","這家公司多年虧損後**破產**了。",14],[529,"greed","n.",5,"貪婪","greedy",3.73,"中","**Greed** for money made him lie to his friends.（自編例句）","對金錢的**貪婪**讓他對朋友說謊。",14],[530,"hose","n./v.",4,"水管","",3.73,"中","Dad used a **hose** to wash the car.（自編例句）","爸爸用**水管**洗車。",14],[531,"millionaire","n.",4,"百萬富翁","",3.73,"中","He became a **millionaire** by selling his app.（自編例句）","他靠著賣掉自己的應用程式成了**百萬富翁**。",14],[532,"notify","v.",5,"通知","notification",3.73,"中","Please **notify** us if you change your address.（自編例句）","如果你更改地址，請**通知**我們。",14],[533,"patron","n.",5,"贊助人；常客","",3.73,"中","The restaurant gives its regular **patrons** a ten percent discount.（自編例句）","這家餐廳給**常客**打九折。",14],[534,"renew","v.",4,"更新；續約","renewal",3.73,"中","I need to **renew** my passport before it expires.（自編例句）","我得在護照過期前去**更新**。",14],[535,"saddle","n./v.",5,"坐墊；馬鞍","",3.73,"中","The bike **saddle** is too high for my little sister.（自編例句）","這台腳踏車的**坐墊**對我妹妹來說太高了。",14],[536,"aisle","n.",5,"走道","",3.72,"中","Would you like a window seat or an **aisle** seat?（自編例句）","你想要靠窗還是靠**走道**的座位？",14],[537,"atom","n.",4,"原子","atomic",3.72,"中","A water molecule is made of three **atoms**.（自編例句）","一個水分子由三個**原子**組成。",14],[538,"confrontation","n.",5,"衝突；對抗","confront",3.72,"中","The police tried to avoid a **confrontation** with the protesters.（自編例句）","警方試圖避免與抗議者發生**衝突**。",14],[539,"miniature","adj./n.",5,"縮小的；小型的","",3.72,"中","The museum has a **miniature** model of the old city.（自編例句）","博物館裡有一座古城的**縮小**模型。",14],[540,"nationality","n.",4,"國籍；民族","nation",3.72,"中","People of more than thirty **nationalities** work at this company.（自編例句）","這家公司的員工來自三十多個**國籍**。",14],[541,"philosopher","n.",4,"哲學家","philosophy",3.72,"中","Socrates was a famous Greek **philosopher**.（自編例句）","蘇格拉底是著名的希臘**哲學家**。",15],[542,"slogan","n.",4,"標語；口號","",3.72,"中","\"Just Do It\" is a famous advertising **slogan**.（自編例句）","「Just Do It」是一句著名的廣告**標語**。",15],[543,"sponsorship","n.",5,"贊助","sponsor",3.72,"中","The concert was made possible by **sponsorship** from local companies.（自編例句）","這場音樂會能夠舉辦，要歸功於當地企業的**贊助**。",15],[544,"temptation","n.",5,"誘惑","tempt",3.72,"中","It's hard to resist the **temptation** to check my phone during class.（自編例句）","上課時很難抗拒看手機的**誘惑**。",15],[545,"tile","n./v.",5,"磁磚；瓦片","",3.72,"中","The bathroom floor is covered with white **tiles**.（自編例句）","浴室地板鋪著白色**磁磚**。",15],[546,"abnormal","adj.",5,"異常的；不正常的","",3.71,"中","The doctor said the test results were **abnormal**.（自編例句）","醫生說檢查結果**異常**。",15],[547,"lump","n./v.",5,"塊；腫塊","",3.71,"中","Add one **lump** of sugar to the tea.（自編例句）","在茶裡加一**塊**方糖。",15],[548,"masculine","adj./n.",5,"陽剛的；男子氣概的","",3.71,"中","He has a deep, **masculine** voice.（自編例句）","他有著低沉、**陽剛的**嗓音。",15],[549,"relaxation","n.",4,"放鬆；休閒","relax",3.71,"中","Reading is my favorite form of **relaxation**.（自編例句）","閱讀是我最喜歡的**放鬆**方式。",15],[550,"respectable","adj.",4,"體面的；值得尊敬的","respect",3.71,"中","He wants to find a **respectable** job after graduation.（自編例句）","他希望畢業後能找到一份**體面的**工作。",15],[551,"shady","adj.",4,"可疑的；陰涼的","shade",3.71,"中","Don't trust him. He was involved in some **shady** business deals.（自編例句）","別相信他，他曾涉入一些**可疑的**交易。",15],[552,"tactic","n.",5,"策略；手段","tactics",3.71,"中","Ignoring the problem is not a good **tactic**.（自編例句）","忽視問題並不是好的**策略**。",15],[553,"beware","v.",5,"小心；當心","",3.7,"中","**Beware** of the dog!（自編例句）","**小心**有狗！",15],[554,"bracelet","n.",4,"手鍊；手鐲","",3.7,"中","She wore a silver **bracelet** on her wrist.（自編例句）","她手腕上戴著一條銀**手鍊**。",15],[555,"comprehend","v.",5,"理解","comprehension",3.7,"中","The little boy couldn't **comprehend** why his parents were sad.（自編例句）","那個小男孩無法**理解**為什麼爸媽很難過。",15],[556,"delegate","n./v.",5,"代表；委派","delegation",3.7,"中","Each class sent two **delegates** to the student council meeting.（自編例句）","每班派兩名**代表**出席學生會會議。",15],[557,"deploy","v.",5,"部署；調派","",3.7,"中","The government **deployed** soldiers to help with the flood rescue.（自編例句）","政府**調派**軍人協助水災救援。",15],[558,"emission","n.",5,"排放；排放物","emit",3.7,"中","Cars are a major source of carbon **emissions**.（自編例句）","汽車是碳**排放**的主要來源。",15],[559,"gaze","n./v.",4,"凝視；注視","",3.7,"中","She **gazed** at the stars for a long time.（自編例句）","她**凝視**著星星好長一段時間。",15],[560,"idle","adj./v.",4,"閒置的；無所事事的","",3.7,"中","Many factories sat **idle** during the economic crisis.（自編例句）","經濟危機期間，許多工廠都處於**閒置**狀態。",15],[561,"premature","adj.",5,"過早的；早產的","",3.7,"中","The baby was born two months **premature**.（自編例句）","這個嬰兒**早產**兩個月。",15],[562,"technician","n.",4,"技術人員；技師","technical、technique",3.7,"中","A **technician** came to fix our internet connection.（自編例句）","一位**技術人員**來修理我們的網路。",15],[563,"diplomat","n.",4,"外交官","diplomatic",3.69,"中","My uncle is a **diplomat** who has worked in many countries.（自編例句）","我叔叔是一名在許多國家工作過的**外交官**。",15],[564,"lipstick","n.",4,"口紅","",3.69,"中","She put on some red **lipstick** before the party.（自編例句）","她在派對前擦了點紅色**口紅**。",15],[565,"mustard","n.",5,"芥末","",3.69,"中","I like to put **mustard** on my hot dog.（自編例句）","我喜歡在熱狗上加**芥末**。",15],[566,"poetic","adj.",5,"詩意的；詩的","poem、poet、poetry",3.69,"中","The writer described the sunset in a very **poetic** way.（自編例句）","作家用非常**詩意的**方式描寫夕陽。",15],[567,"sophomore","n.",5,"二年級生","",3.69,"中","My brother is a **sophomore** at National Taiwan University.（自編例句）","我哥哥是臺灣大學的**二年級生**。",15],[568,"traitor","n.",5,"叛徒","",3.69,"中","He was called a **traitor** for selling secrets to the enemy.（自編例句）","他因為把機密賣給敵人而被稱為**叛徒**。",15],[569,"honeymoon","n./v.",4,"蜜月","",3.68,"中","The couple went to Hawaii for their **honeymoon**.（自編例句）","這對新人去夏威夷度**蜜月**。",15],[570,"rehearsal","n.",5,"彩排；排演","rehearse",3.68,"中","We have a dress **rehearsal** for the play tomorrow.（自編例句）","我們明天要為這齣戲進行**彩排**。",15],[571,"scenery","n.",4,"風景；景色","scene、scenic",3.68,"中","The **scenery** along the east coast of Taiwan is beautiful.（自編例句）","臺灣東海岸沿線的**風景**很美。",15],[572,"strand","v./n.",5,"使受困；一縷","",3.68,"中","Hundreds of passengers were **stranded** at the airport because of the typhoon.（自編例句）","數百名旅客因颱風**受困**機場。",15],[573,"cite","v.",5,"引用；註明","citation",3.67,"中","Please **cite** your sources at the end of your report.（自編例句）","請在報告最後**註明**資料來源。",15],[574,"commentator","n.",5,"評論員；球評","comment、commentary",3.67,"中","The TV **commentator** explained each player's moves during the game.（自編例句）","電視**球評**在比賽中解說每位球員的動作。",15],[575,"coward","n.",4,"膽小鬼；懦夫","cowardly",3.67,"中","Don't be a **coward**. Tell her the truth.（自編例句）","別當**膽小鬼**，告訴她真相吧。",15],[576,"lag","n./v.",4,"落後；延遲","",3.67,"中","Our school **lags** behind others in science education.（自編例句）","我們學校在科學教育上**落後**其他學校。",15],[577,"molecule","n.",5,"分子","molecular",3.67,"中","A **molecule** of water contains two hydrogen atoms and one oxygen atom.（自編例句）","一個水**分子**含有兩個氫原子和一個氧原子。",15],[578,"translator","n.",4,"譯者；翻譯員","translate、translation",3.67,"中","She works as a **translator** for a publishing company.（自編例句）","她在一家出版社擔任**譯者**。",15],[579,"dreadful","adj.",5,"糟透的；可怕的","dread",3.66,"中","The weather was **dreadful**, so we stayed home all day.（自編例句）","天氣**糟透**了，所以我們整天待在家裡。",16],[580,"earnest","adj./n.",4,"認真的；誠摯的","",3.66,"中","She made an **earnest** effort to improve her English.（自編例句）","她**認真**努力地提升自己的英文能力。",16],[581,"optimism","n.",5,"樂觀","optimistic、optimist",3.66,"中","She faced her illness with courage and **optimism**.（自編例句）","她以勇氣和**樂觀**面對病痛。",16],[582,"repay","v.",5,"償還；報答","",3.66,"中","I'll **repay** the money I borrowed from you next week.（自編例句）","我下週會**償還**向你借的錢。",16],[583,"shove","v./n.",5,"推擠","",3.66,"中","People were **shoving** each other to get onto the train.（自編例句）","人們互相**推擠**著要上火車。",16],[584,"chord","n.",5,"和弦","",3.65,"中","He learned to play three **chords** on the guitar.（自編例句）","他學會用吉他彈三個**和弦**。",16],[585,"driveway","n.",5,"車道","",3.65,"中","My father parked the car in the **driveway**.（自編例句）","我爸爸把車停在**車道**上。",16],[586,"undermine","v.",5,"削弱；破壞","",3.65,"中","Lack of sleep can **undermine** your health.（自編例句）","睡眠不足會逐漸**削弱**你的健康。",16],[587,"assemble","v.",4,"組裝；集合","assembly",3.64,"中","It took me two hours to **assemble** the new desk.（自編例句）","我花了兩個小時**組裝**這張新書桌。",16],[588,"pillar","n.",5,"柱子；支柱","",3.64,"中","The temple roof is supported by red wooden **pillars**.（自編例句）","廟宇的屋頂由紅色木**柱**支撐。",16],[589,"tuna","n.",5,"鮪魚","",3.64,"中","Donggang in Pingtung is famous for its fresh bluefin **tuna**.（自編例句）","屏東東港以新鮮的黑**鮪魚**聞名。",16],[590,"viewpoint","n.",5,"觀點","",3.64,"中","Try to look at the problem from a different **viewpoint**.（自編例句）","試著從不同的**觀點**看這個問題。",16],[591,"vinegar","n.",5,"醋","",3.64,"中","Add a little **vinegar** to the salad.（自編例句）","在沙拉裡加一點**醋**。",16],[592,"attic","n.",5,"閣樓","",3.63,"中","We found some old photos in the **attic**.（自編例句）","我們在**閣樓**裡找到一些舊照片。",16],[593,"autobiography","n.",4,"自傳","",3.63,"中","The famous singer wrote an **autobiography** about her early life.（自編例句）","那位知名歌手寫了一本關於她早年生活的**自傳**。",16],[594,"await","v.",4,"等待","",3.63,"中","Many fans are eagerly **awaiting** the singer's new album.（自編例句）","許多歌迷正熱切**等待**這位歌手的新專輯。",16],[595,"coherent","adj.",5,"有條理的；連貫的","",3.63,"中","Your essay needs a more **coherent** structure.（自編例句）","你的作文需要更**有條理的**架構。",16],[596,"fax","n./v.",4,"傳真","",3.63,"中","Please **fax** the form to our office.（自編例句）","請把表格**傳真**到我們辦公室。",16],[597,"groom","n.",4,"新郎；梳理","",3.63,"中","The bride and **groom** cut the wedding cake together.（自編例句）","新娘和**新郎**一起切結婚蛋糕。",16],[598,"practitioner","n.",5,"從業人員；開業醫生","practice",3.63,"中","Medical **practitioners** must renew their licenses every few years.（自編例句）","醫療**從業人員**每隔幾年必須更新執照。",16],[599,"shareholder","n.",5,"股東","",3.63,"中","The company's **shareholders** will meet next month.（自編例句）","公司的**股東**下個月將開會。",16],[600,"squash","n./v.",5,"壓扁；南瓜","",3.63,"中","Be careful not to **squash** the tomatoes in the bag.（自編例句）","小心別把袋子裡的番茄**壓扁**。",16],[601,"presume","v.",5,"推測；假定","presumably",3.62,"中","I **presume** you've already heard the news.（自編例句）","我**推測**你已經聽說這個消息了。",16],[602,"disgust","n./v.",4,"厭惡；作嘔","disgusting",3.61,"中","She looked at the dirty kitchen with **disgust**.（自編例句）","她**厭惡**地看著骯髒的廚房。",16],[603,"hostility","n.",5,"敵意","hostile",3.61,"中","The new student was met with **hostility** by some classmates.（自編例句）","新同學遭到一些同學的**敵意**對待。",16],[604,"informative","adj.",4,"資訊豐富的；增廣見聞的","inform、information",3.61,"中","The museum tour was both fun and **informative**.（自編例句）","這次博物館導覽既有趣又能**增廣見聞**。",16],[605,"linen","n.",4,"亞麻布；寢具","",3.61,"中","This summer shirt is made of **linen**.（自編例句）","這件夏季襯衫是用**亞麻布**做的。",16],[606,"rusty","adj.",4,"生疏的；生鏽的","rust",3.61,"中","My English is a bit **rusty** because I haven't used it for years.（自編例句）","我好幾年沒用英文，所以有點**生疏**了。",16],[607,"agony","n.",5,"極度痛苦","",3.6,"中","He was in **agony** after breaking his leg.（自編例句）","他摔斷腿後**痛苦**萬分。",16],[608,"poke","v./n.",5,"戳；刺","",3.6,"中","Don't **poke** the cat with a stick.（自編例句）","不要用棍子**戳**那隻貓。",16],[609,"calorie","n.",4,"卡路里；大卡","",3.59,"中","A can of soda contains about 150 **calories**.（自編例句）","一罐汽水大約含有一百五十**大卡**的熱量。",16],[610,"claw","n./v.",4,"爪子","",3.59,"中","The cat uses its sharp **claws** to climb trees.（自編例句）","貓用牠銳利的**爪子**爬樹。",16],[611,"congratulate","v.",4,"恭喜；祝賀","congratulation",3.59,"中","Everyone **congratulated** her on winning the speech contest.（自編例句）","大家都**恭喜**她贏得演講比賽。",16],[612,"courageous","adj.",4,"勇敢的","courage",3.59,"中","The **courageous** firefighter saved a child from the burning building.（自編例句）","那位**勇敢的**消防員從火場中救出一名孩童。",16],[613,"economical","adj.",4,"經濟實惠的；節約的","economy",3.59,"中","Taking the MRT is more **economical** than taking a taxi.（自編例句）","搭捷運比搭計程車更**經濟實惠**。",16],[614,"elastic","adj./n.",4,"有彈性的；鬆緊帶","",3.59,"中","These pants have an **elastic** waist.（自編例句）","這件褲子的腰部是**鬆緊帶**設計。",16],[615,"gracious","adj.",4,"親切的；優雅的","grace",3.59,"中","The host was very **gracious** and made everyone feel welcome.（自編例句）","主人非常**親切**，讓每個人都感到賓至如歸。",16],[616,"resemblance","n.",5,"相像；相似之處","resemble",3.59,"中","There is a strong **resemblance** between the two sisters.（自編例句）","這兩姊妹長得非常**相像**。",16],[617,"rib","n./v.",5,"肋骨；排骨","",3.59,"中","He broke two **ribs** in the car accident.（自編例句）","他在車禍中斷了兩根**肋骨**。",17],[618,"adolescent","adj./n.",5,"青少年；青春期的","adolescence",3.58,"中","Many **adolescents** worry about how they look.（自編例句）","許多**青少年**很在意自己的外表。",17],[619,"columnist","n.",5,"專欄作家","column",3.58,"中","She is a newspaper **columnist** who writes about education.（自編例句）","她是報紙的**專欄作家**，專寫教育議題。",17],[620,"miner","n.",4,"礦工","mine",3.58,"中","The **miners** were trapped underground for three days.（自編例句）","**礦工**們被困在地底下三天。",17],[621,"orphan","n./v.",4,"孤兒","orphanage",3.58,"中","The little girl became an **orphan** after her parents died in the war.（自編例句）","小女孩的父母死於戰爭，她成了**孤兒**。",17],[622,"youthful","adj.",4,"年輕的；有朝氣的","youth",3.58,"中","My grandmother still looks **youthful** at seventy.（自編例句）","我奶奶七十歲了，看起來還是很**年輕**。",17],[623,"ambiguous","adj.",4,"模稜兩可的","",3.57,"中","The question was **ambiguous**, so many students got it wrong.（自編例句）","這道題目**模稜兩可**，所以很多學生答錯。",17],[624,"handwriting","n.",4,"字跡；筆跡","",3.57,"中","Your **handwriting** is so neat!（自編例句）","你的**字跡**好工整！",17],[625,"nominate","v.",5,"提名","nomination、nominee",3.57,"中","She was **nominated** for the best student award.（自編例句）","她被**提名**角逐最佳學生獎。",17],[626,"offend","v.",4,"冒犯；得罪","offense、offensive",3.57,"中","I'm sorry if my joke **offended** you.（自編例句）","如果我的玩笑**冒犯**了你，我很抱歉。",17],[627,"orchard","n.",5,"果園","",3.57,"中","My uncle owns an apple **orchard** in Lishan.（自編例句）","我叔叔在梨山擁有一座蘋果**果園**。",17],[628,"poisonous","adj.",4,"有毒的","poison",3.57,"中","Some mushrooms are **poisonous**, so don't eat them.（自編例句）","有些菇類**有毒**，千萬別吃。",17],[629,"shameful","adj.",4,"可恥的","shame",3.57,"中","Cheating on the test is a **shameful** thing to do.（自編例句）","考試作弊是**可恥的**行為。",17],[630,"undo","v.",5,"復原；解開","",3.57,"中","Press Ctrl+Z to **undo** your last change.（自編例句）","按 Ctrl+Z 可以**復原**上一個變更。",17],[631,"wary","adj.",5,"提防的；謹慎的","",3.57,"中","Be **wary** of strangers who ask for your personal information.（自編例句）","要**提防**向你索取個人資料的陌生人。",17],[632,"implication","n.",5,"影響；含意","imply",3.56,"中","What are the **implications** of this decision for students?（自編例句）","這項決定對學生有什麼**影響**？",17],[633,"rhyme","n./v.",4,"押韻；韻","",3.56,"中","\"Cat\" and \"hat\" **rhyme**.（自編例句）","cat 和 hat **押韻**。",17],[634,"subsidy","n.",5,"補助金；補助","",3.56,"中","The government offers a **subsidy** to families who buy electric scooters.（自編例句）","政府對購買電動機車的家庭提供**補助**。",17],[635,"vow","n./v.",5,"發誓；誓言","",3.56,"中","He made a **vow** never to smoke again.（自編例句）","他**發誓**再也不抽菸。",17],[636,"witty","adj.",5,"風趣的；機智的","wit",3.56,"中","He is a **witty** speaker who always makes people laugh.（自編例句）","他是一位**風趣的**講者，總能逗大家笑。",17],[637,"amend","v.",5,"修正；修訂","amendment",3.55,"中","The law was **amended** to protect animals better.（自編例句）","這條法律經過**修正**，以更完善地保護動物。",17],[638,"bureaucracy","n.",5,"官僚體系","bureaucrat",3.55,"中","Getting a permit takes months because of the **bureaucracy**.（自編例句）","因為**官僚**體系，申請許可要花好幾個月。",17],[639,"hesitation","n.",4,"猶豫","hesitate",3.55,"中","She answered the question without **hesitation**.（自編例句）","她毫不**猶豫**地回答了問題。",17],[640,"luxurious","adj.",4,"豪華的；奢華的","luxury",3.55,"中","They stayed in a **luxurious** hotel by the sea.（自編例句）","他們住在海邊一家**豪華的**飯店。",17],[641,"outsider","n.",5,"外人；局外人","",3.55,"中","As a new student, I felt like an **outsider** at first.（自編例句）","身為新生，我一開始覺得自己像個**外人**。",17],[642,"plum","n.",4,"李子；梅子","",3.55,"中","My grandmother makes jam from **plums**.（自編例句）","我奶奶用**李子**做果醬。",17],[643,"plural","adj./n.",5,"複數；複數的","",3.55,"中","The **plural** of \"child\" is \"children.\"（自編例句）","child 的**複數**是 children。",17],[644,"prevail","v.",5,"獲勝；盛行","prevalent",3.55,"中","In the end, justice will **prevail**.（自編例句）","到最後，正義終將**獲勝**。",17],[645,"articulate","v./adj.",5,"口齒清晰的；清楚表達","",3.54,"中","She is an **articulate** speaker who explains her ideas clearly.（自編例句）","她是一位**口齒清晰的**講者，能清楚說明自己的想法。",17],[646,"ethic","n.",5,"倫理；道德規範","ethical",3.54,"中","She has a strong work **ethic** and never misses a deadline.（自編例句）","她有很強的工作**倫理**，從不錯過截止期限。",17],[647,"fireplace","n.",4,"壁爐","",3.54,"中","The family sat around the **fireplace** on a cold night.（自編例句）","寒冷的夜晚，一家人圍坐在**壁爐**旁。",17],[648,"intuition","n.",4,"直覺","intuitive",3.54,"中","My **intuition** told me not to trust him.（自編例句）","我的**直覺**告訴我不要相信他。",17],[649,"kettle","n.",4,"水壺；茶壺","",3.54,"中","Put the **kettle** on and make some tea.（自編例句）","把**水壺**放上去燒水，泡些茶吧。",17],[650,"lest","conj.",5,"以免","",3.54,"中","He wrote down her phone number **lest** he forget it.（自編例句）","他把她的電話號碼寫下來，**以免**忘記。",17],[651,"whereabouts","n./adv.",5,"下落；行蹤","",3.54,"中","The police are trying to find out the **whereabouts** of the missing child.（自編例句）","警方正設法查明失蹤孩童的**下落**。",17],[652,"pastry","n.",5,"糕點；酥皮","",3.53,"中","This bakery is famous for its French **pastries**.（自編例句）","這家麵包店以法式**糕點**聞名。",17],[653,"quota","n.",5,"配額；限額","",3.53,"中","Each fishing boat has a **quota** on how much tuna it can catch.（自編例句）","每艘漁船能捕撈的鮪魚數量都有**配額**。",17],[654,"sentimental","adj.",5,"感傷的；多愁善感的","sentiment",3.53,"中","She gets **sentimental** whenever she looks at her old photos.（自編例句）","她每次看舊照片都會變得很**感傷**。",17],[655,"cherish","v.",4,"珍惜；珍愛","",3.52,"中","I will always **cherish** the memories of my high school days.（自編例句）","我會永遠**珍惜**高中時期的回憶。",18],[656,"curl","n./v.",4,"捲曲；蜷縮","curly",3.52,"中","The cat **curled** up on the sofa and fell asleep.（自編例句）","那隻貓在沙發上**蜷縮**成一團睡著了。",18],[657,"dew","n.",4,"露水","",3.52,"中","The grass was wet with morning **dew**.（自編例句）","草地被清晨的**露水**沾濕了。",18],[658,"fluent","adj.",4,"流利的","fluency",3.52,"中","She is **fluent** in English, Japanese, and Korean.（自編例句）","她的英文、日文和韓文都很**流利**。",18],[659,"socket","n.",4,"插座；窩","",3.52,"中","Plug the charger into the wall **socket**.（自編例句）","把充電器插進牆上的**插座**。",18],[660,"diligence","n.",4,"勤奮","diligent",3.51,"中","Her **diligence** helped her get into a top university.（自編例句）","她的**勤奮**幫助她考上頂尖大學。",18],[661,"doorway","n.",5,"門口","",3.51,"中","A cat was sitting in the **doorway**.（自編例句）","一隻貓坐在**門口**。",18],[662,"postage","n.",4,"郵資","",3.51,"中","How much is the **postage** for sending this letter to Japan?（自編例句）","這封信寄到日本的**郵資**是多少？",18],[663,"spectator","n.",5,"觀眾","",3.51,"中","Thousands of **spectators** watched the baseball game.（自編例句）","數千名**觀眾**觀看了這場棒球賽。",18],[664,"hive","n.",4,"蜂巢","",3.5,"中","The bees flew back to their **hive**.（自編例句）","蜜蜂飛回**蜂巢**。",18],[665,"obedience","n.",4,"服從；順從","obey、obedient",3.5,"中","The dog was trained in **obedience** at a special school.（自編例句）","這隻狗在專門學校接受過**服從**訓練。",18],[666,"wink","n./v.",4,"眨眼；使眼色","",3.5,"中","He gave me a **wink** to show he was joking.（自編例句）","他對我**使**了個**眼色**，表示他在開玩笑。",18],[667,"diaper","n.",5,"尿布","",3.49,"中","Babies need their **diapers** changed many times a day.（自編例句）","嬰兒一天要換好幾次**尿布**。",18],[668,"plunge","n./v.",5,"驟降；跳入","",3.49,"中","Stock prices **plunged** after the news.（自編例句）","消息傳出後，股價**驟降**。",18],[669,"admirable","adj.",4,"令人欽佩的","admire",3.48,"中","Her courage in the face of illness was **admirable**.（自編例句）","她面對病痛的勇氣**令人欽佩**。",18],[670,"concede","v.",5,"承認；讓步","concession",3.48,"中","He finally **conceded** that he had made a mistake.（自編例句）","他終於**承認**自己犯了錯。",18],[671,"kidnap","v.",5,"綁架","",3.48,"中","The businessman was **kidnapped** and held for ransom.（自編例句）","那名商人遭到**綁架**，綁匪要求贖金。",18],[672,"paw","n./v.",4,"腳掌；肉球","",3.48,"中","The dog left muddy **paw** prints on the floor.（自編例句）","狗在地板上留下了泥濘的**腳掌**印。",18],[673,"repetition","n.",4,"重複","repeat",3.48,"中","Learning vocabulary takes a lot of **repetition**.（自編例句）","背單字需要大量的**重複**練習。",18],[674,"speculate","v.",5,"推測；投機","speculation",3.48,"中","Scientists can only **speculate** about how the universe began.（自編例句）","科學家對宇宙如何起源只能**推測**。",18],[675,"squat","adj./n./v.",5,"蹲下","",3.48,"中","He **squatted** down to tie his shoes.（自編例句）","他**蹲**下來綁鞋帶。",18],[676,"stew","n./v.",5,"燉菜；燉煮","",3.48,"中","My mother made beef **stew** for dinner.（自編例句）","我媽媽晚餐煮了**燉**牛肉。",18],[677,"hush","n./v.",4,"安靜；使安靜","",3.47,"中","A **hush** fell over the room when the teacher walked in.（自編例句）","老師一走進來，教室裡頓時一片**安靜**。",18],[678,"imitation","n.",4,"仿製品；模仿","imitate",3.47,"中","This bag is not real leather; it's an **imitation**.（自編例句）","這個包包不是真皮，是**仿製品**。",18],[679,"stockings","n.",4,"絲襪；長襪","",3.47,"中","She wore black **stockings** with her dress.（自編例句）","她穿著洋裝搭配黑色**絲襪**。",18],[680,"voucher","n.",5,"禮券；代金券","",3.47,"中","You can use this **voucher** to get a free coffee.（自編例句）","你可以用這張**禮券**換一杯免費咖啡。",18],[681,"stink","n./v.",5,"發臭；臭味","",3.46,"中","The garbage **stinks** because nobody took it out.（自編例句）","垃圾沒人拿去倒，**發臭**了。",18],[682,"contradiction","n.",5,"矛盾","contradict",3.45,"中","There is a **contradiction** between what he says and what he does.（自編例句）","他的言行之間存在**矛盾**。",18],[683,"cunning","adj./n.",4,"狡猾的","",3.45,"中","The fox in the story is very **cunning**.（自編例句）","故事裡的狐狸非常**狡猾**。",18],[684,"gasp","n./v.",5,"倒抽一口氣；喘氣","",3.45,"中","The audience **gasped** when the acrobat fell.（自編例句）","特技演員摔下來時，觀眾**倒抽一口氣**。",18],[685,"imaginative","adj.",4,"富有想像力的","imagine、imagination",3.45,"中","The children wrote very **imaginative** stories.（自編例句）","孩子們寫了很**富有想像力的**故事。",18],[686,"prosper","v.",4,"繁榮；興旺","prosperity、prosperous",3.45,"中","The town **prospered** after the new highway was built.（自編例句）","新的高速公路建成後，這個小鎮日漸**繁榮**。",18],[687,"sew","v.",4,"縫；縫紉","",3.45,"中","My grandmother taught me how to **sew** a button on a shirt.（自編例句）","奶奶教我怎麼在襯衫上**縫**釦子。",18],[688,"statistic","n.",4,"統計數字","statistics、statistical",3.45,"中","One **statistic** shows that 30 percent of students don't eat breakfast.（自編例句）","有一項**統計數字**顯示，三成學生不吃早餐。",18],[689,"unfold","v.",5,"攤開；展開","",3.45,"中","She **unfolded** the map and looked for the museum.（自編例句）","她**攤開**地圖，尋找博物館的位置。",18],[690,"mule","n.",4,"騾子","",3.44,"中","The farmer used a **mule** to carry goods up the mountain.（自編例句）","農夫用一頭**騾子**把貨物運上山。",18],[691,"riddle","n.",4,"謎語","",3.44,"中","Can you solve this **riddle**?（自編例句）","你能解開這個**謎語**嗎？",18],[692,"timetable","n.",4,"時刻表","",3.44,"中","Check the train **timetable** before you go to the station.（自編例句）","去車站前先查一下火車**時刻表**。",18],[693,"stereotype","n./v.",5,"刻板印象","",3.43,"中","It's a **stereotype** that all scientists wear glasses.（自編例句）","認為所有科學家都戴眼鏡，是一種**刻板印象**。",19],[694,"betray","v.",5,"背叛","betrayal",3.42,"中","He felt hurt when his best friend **betrayed** him.（自編例句）","當最好的朋友**背叛**他時，他非常受傷。",19],[695,"defy","v.",5,"違抗；藐視","",3.42,"中","The teenager **defied** his parents and went out late at night.（自編例句）","那名青少年**違抗**父母，深夜外出。",19],[696,"flea","n.",4,"跳蚤","",3.42,"中","Our dog has **fleas**, so we need to give it a bath.（自編例句）","我們的狗身上有**跳蚤**，得幫牠洗澡。",19],[697,"physicist","n.",4,"物理學家","physics",3.42,"中","Albert Einstein was one of the greatest **physicists** in history.（自編例句）","愛因斯坦是史上最偉大的**物理學家**之一。",19],[698,"diagnose","v.",5,"診斷","diagnosis",3.41,"中","The doctor **diagnosed** her with the flu.（自編例句）","醫生**診斷**她得了流感。",19],[699,"spacious","adj.",5,"寬敞的","space",3.41,"中","Our new apartment is bright and **spacious**.（自編例句）","我們的新公寓明亮又**寬敞**。",19],[700,"windshield","n.",5,"擋風玻璃","",3.41,"中","A small stone cracked the car's **windshield**.（自編例句）","一顆小石頭把車子的**擋風玻璃**打裂了。",19],[701,"conceive","v.",5,"想像；構想","conception、concept",3.4,"中","It's hard to **conceive** of a world without the internet.（自編例句）","很難**想像**沒有網路的世界。",19],[702,"gloomy","adj.",5,"陰沉的；憂鬱的","gloom",3.39,"中","The sky was dark and **gloomy** all day.（自編例句）","天空整天又暗又**陰沉**。",19],[703,"graceful","adj.",4,"優雅的","grace",3.39,"中","The ballet dancer moved in a **graceful** way.（自編例句）","那位芭蕾舞者的動作很**優雅**。",19],[704,"peep","n./v.",4,"偷看；窺視","",3.39,"中","The little boy **peeped** through the keyhole.（自編例句）","小男孩從鑰匙孔**偷看**。",19],[705,"pickle","n.",4,"醃黃瓜；醃菜","",3.39,"中","I'd like some **pickles** in my hamburger.（自編例句）","我的漢堡裡想加一些**醃黃瓜**。",19],[706,"prescribe","v.",5,"開（藥方）；規定","prescription",3.39,"中","The doctor **prescribed** some medicine for my cough.（自編例句）","醫生針對我的咳嗽**開**了一些藥。",19],[707,"robber","n.",4,"搶匪；強盜","rob",3.39,"中","The **robber** ran away with the money.（自編例句）","**搶匪**帶著錢逃跑了。",19],[708,"soar","v.",5,"翱翔；飆升","",3.39,"中","Eagles **soar** high in the sky.（自編例句）","老鷹在高空中**翱翔**。",19],[709,"sprinkle","v./n.",4,"撒；灑","",3.39,"中","**Sprinkle** some salt on the fries.（自編例句）","在薯條上**撒**一點鹽。",19],[710,"troublesome","adj.",4,"麻煩的；棘手的","trouble",3.39,"中","Filling out all these forms is very **troublesome**.（自編例句）","填寫這些表格非常**麻煩**。",19],[711,"deceive","v.",5,"欺騙","deception、deceit",3.38,"中","Don't let the low price **deceive** you; the quality is poor.（自編例句）","別被低價**欺騙**了，品質很差。",19],[712,"mountainous","adj.",4,"多山的","mountain",3.38,"中","Taiwan is a **mountainous** island.（自編例句）","臺灣是一座**多山的**島嶼。",19],[713,"sow","v.",5,"播種","",3.38,"中","Farmers **sow** rice seeds in early spring.（自編例句）","農夫在早春**播**下稻種。",19],[714,"haste","n.",4,"匆忙；急忙","hasty、hasten",3.37,"中","She left in such **haste** that she forgot her phone.（自編例句）","她走得太**匆忙**，忘了帶手機。",19],[715,"loosen","v.",4,"鬆開；放鬆","loose",3.37,"中","He **loosened** his tie after the meeting.（自編例句）","開完會後，他**鬆開**了領帶。",19],[716,"moan","n./v.",5,"呻吟；抱怨","",3.37,"中","The injured player **moaned** in pain.（自編例句）","受傷的球員痛苦地**呻吟**。",19],[717,"interruption","n.",4,"中斷；打斷","interrupt",3.36,"中","She worked for three hours without **interruption**.（自編例句）","她連續工作三個小時，沒有**中斷**。",19],[718,"mischief","n.",4,"調皮；惡作劇","mischievous",3.36,"中","The twins are always getting into **mischief**.（自編例句）","這對雙胞胎總是**調皮**搗蛋。",19],[719,"plentiful","adj.",4,"充足的；豐富的","plenty",3.36,"中","Fruit is **plentiful** in Taiwan in the summer.（自編例句）","夏天在臺灣，水果**充足**又便宜。",19],[720,"plumber","n.",4,"水電工；水管工","",3.36,"中","We called a **plumber** to fix the leaking pipe.（自編例句）","我們請了**水電工**來修漏水的水管。",19],[721,"soften","v.",5,"使變軟；緩和","soft",3.36,"中","Leave the butter out for an hour to **soften** it.（自編例句）","把奶油放在室溫一小時讓它**變軟**。",19],[722,"torment","n./v.",5,"折磨；痛苦","",3.36,"中","The pain in his back was a constant **torment**.（自編例句）","他背部的疼痛是一種持續的**折磨**。",19],[723,"appliance","n.",5,"家電；器具","",3.35,"中","The store sells kitchen **appliances** such as toasters and microwaves.（自編例句）","這家店販售烤麵包機、微波爐等廚房**家電**。",19],[724,"continual","adj.",4,"不斷的；持續的","continue",3.35,"中","I'm tired of his **continual** complaints.（自編例句）","我受夠了他**不斷的**抱怨。",19],[725,"giggle","n./v.",4,"咯咯笑","",3.35,"中","The girls **giggled** at the funny video.（自編例句）","女孩們看著好笑的影片**咯咯笑**。",19],[726,"rattle","v./n.",5,"嘎嘎作響；搖鈴","",3.35,"中","The windows **rattled** in the strong wind.（自編例句）","窗戶在強風中**嘎嘎作響**。",19],[727,"burglar","n.",4,"竊賊；闖空門者","burglary",3.34,"中","A **burglar** broke into our neighbor's house last night.（自編例句）","昨晚有**竊賊**闖進鄰居家。",19],[728,"originality","n.",5,"創意；獨創性","original、origin",3.34,"中","The judges praised her painting for its **originality**.（自編例句）","評審稱讚她的畫作充滿**創意**。",19],[729,"persuasion","n.",4,"勸說；說服","persuade",3.33,"中","After a lot of **persuasion**, my parents let me go on the trip.（自編例句）","經過一番**勸說**，爸媽終於讓我去旅行。",19],[730,"scarcely","adv.",4,"幾乎不","scarce",3.33,"中","I could **scarcely** believe my eyes.（自編例句）","我**幾乎不**敢相信自己的眼睛。",19],[731,"spade","n.",4,"鏟子；黑桃","",3.33,"中","He used a **spade** to dig a hole in the garden.（自編例句）","他用**鏟子**在花園裡挖洞。",20],[732,"measurable","adj.",4,"顯著的；可測量的","measure",3.32,"中","The new teaching method has led to **measurable** improvements in students' scores.（自編例句）","新的教學方法讓學生成績有了**顯著的**進步。",20],[733,"supervise","v.",5,"監督；管理","supervisor",3.32,"中","Teachers **supervise** students during the exam.（自編例句）","考試期間由老師**監督**學生。",20],[734,"syllable","n.",4,"音節","",3.32,"中","The word \"banana\" has three **syllables**.（自編例句）","banana 這個字有三個**音節**。",20],[735,"allocate","v.",5,"分配；撥出","allocation",3.31,"中","The school **allocated** more money to the library this year.（自編例句）","學校今年**撥出**更多經費給圖書館。",20],[736,"complication","n.",5,"併發症；複雜情況","complicate",3.31,"中","There were some **complications** after the surgery, so he stayed in the hospital longer.（自編例句）","手術後出現一些**併發症**，所以他住院更久。",20],[737,"exaggeration","n.",5,"誇張；誇大","exaggerate",3.3,"中","It's no **exaggeration** to say that he is the best player on the team.（自編例句）","說他是隊上最好的球員一點也不**誇張**。",20],[738,"jug","n./v.",5,"壺；罐","",3.3,"中","She poured some milk from the **jug**.（自編例句）","她從**壺**裡倒了一些牛奶。",20],[739,"overtake","v.",5,"超車；超越","",3.3,"中","Don't try to **overtake** another car on a curve.（自編例句）","不要在彎道上**超車**。",20],[740,"reassure","v.",5,"使安心；消除疑慮","reassurance、assure",3.3,"中","The doctor said the surgery was safe, which **reassured** me.（自編例句）","醫生說手術很安全，這讓我**安心**了。",20],[741,"shrug","n./v.",5,"聳肩","",3.3,"中","When I asked him where the key was, he just **shrugged**.（自編例句）","我問他鑰匙在哪裡，他只是**聳**了**聳肩**。",20],[742,"constraint","n.",5,"限制；約束","constrain",3.28,"低","Because of time **constraints**, we can only visit two museums.（自編例句）","由於時間**限制**，我們只能參觀兩間博物館。",20],[743,"whine","n./v.",5,"發牢騷；哀鳴","",3.28,"低","Stop **whining** and do your homework!（自編例句）","別再**發牢騷**了，快去寫功課！",20],[744,"proclaim","v.",5,"宣布；宣告","proclamation",3.27,"低","The country **proclaimed** its independence in 1991.（自編例句）","該國在1991年**宣布**獨立。",20],[745,"sob","n./v.",5,"啜泣","",3.27,"低","The little girl **sobbed** when she lost her doll.（自編例句）","小女孩弄丟了洋娃娃，傷心地**啜泣**。",20],[746,"straighten","v.",5,"整理；弄直","straight",3.27,"低","Please **straighten** your desk before you leave.（自編例句）","離開前請把你的書桌**整理**好。",20],[747,"frown","n./v.",4,"皺眉","",3.26,"低","The teacher **frowned** when she saw my messy homework.（自編例句）","老師看到我亂七八糟的作業時**皺**起了**眉**頭。",20],[748,"tortoise","n.",4,"烏龜；陸龜","",3.26,"低","In the story, the **tortoise** beats the hare in a race.（自編例句）","故事中，**烏龜**在賽跑中打敗了兔子。",20],[749,"quilt","n./v.",4,"棉被；被子","",3.25,"低","My grandmother made this **quilt** by hand.（自編例句）","這條**棉被**是我奶奶親手做的。",20],[750,"timid","adj.",4,"膽小的；羞怯的","",3.25,"低","The **timid** boy was afraid to speak in front of the class.（自編例句）","那個**膽小的**男孩不敢在全班面前說話。",20],[751,"bandage","n./v.",4,"繃帶；用繃帶包紮","",3.24,"低","The nurse put a **bandage** on my knee.（自編例句）","護理師在我的膝蓋上纏了**繃帶**。",20],[752,"kneel","v.",4,"跪下","",3.24,"低","She **knelt** down to talk to the little boy.（自編例句）","她**跪**下來和小男孩說話。",20],[753,"modesty","n.",4,"謙虛","modest",3.24,"低","Despite her success, she never lost her **modesty**.（自編例句）","儘管很成功，她始終保持**謙虛**。",20],[754,"tickle","v./n.",4,"搔癢","",3.24,"低","My little brother laughs every time I **tickle** him.（自編例句）","每次我**搔**弟弟**癢**，他都會笑。",20],[755,"crunchy","adj.",4,"酥脆的；脆的","",3.22,"低","These cookies are sweet and **crunchy**.（自編例句）","這些餅乾又甜又**酥脆**。",20],[756,"envious","adj.",5,"羨慕的；嫉妒的","envy",3.22,"低","I'm **envious** of people who can sing well.（自編例句）","我很**羨慕**歌唱得好的人。",20],[757,"tempt","v.",5,"引誘；誘惑","temptation",3.22,"低","The smell of fried chicken **tempted** me to break my diet.（自編例句）","炸雞的香味**引誘**我放棄節食。",20],[758,"eloquent","adj.",5,"雄辯的；口才好的","eloquence",3.21,"低","The lawyer gave an **eloquent** speech in court.（自編例句）","律師在法庭上發表了一場**雄辯的**演說。",20],[759,"prolong","v.",5,"延長","",3.21,"低","Regular exercise can help **prolong** your life.（自編例句）","規律運動有助於**延長**壽命。",20],[760,"superstition","n.",5,"迷信","superstitious",3.21,"低","According to an old **superstition**, breaking a mirror brings seven years of bad luck.（自編例句）","根據一個古老的**迷信**，打破鏡子會帶來七年的厄運。",20],[761,"courteous","adj.",5,"有禮貌的","courtesy",3.2,"低","The hotel staff were friendly and **courteous**.（自編例句）","飯店員工親切又**有禮貌**。",20],[762,"skyscraper","n.",4,"摩天大樓","",3.2,"低","Taipei 101 was once the tallest **skyscraper** in the world.（自編例句）","台北101曾是世界最高的**摩天大樓**。",20],[763,"devise","v.",4,"想出；設計","",3.19,"低","The engineers **devised** a new way to save water.（自編例句）","工程師們**想出**了一種省水的新方法。",20],[764,"exaggerate","v.",4,"誇大；誇張","exaggeration",3.19,"低","Don't **exaggerate**! The fish you caught wasn't that big.（自編例句）","別**誇大**了！你釣到的魚才沒那麼大。",20],[765,"obedient","adj.",4,"聽話的；順從的","obey、obedience",3.19,"低","The dog is very **obedient** and always comes when called.（自編例句）","這隻狗非常**聽話**，一叫就來。",20],[766,"bruise","n./v.",5,"瘀青；瘀傷","",3.18,"低","She fell off her bike and got a **bruise** on her leg.（自編例句）","她從腳踏車上摔下來，腿上**瘀青**了一塊。",20],[767,"howl","n./v.",5,"嚎叫；怒吼","",3.18,"低","At night, the wolves **howled** at the moon, and the villagers could hear them from far away.（自編例句）","夜裡，狼群對著月亮**嚎叫**，遠處的村民都聽得到。",20],[768,"nutritious","adj.",4,"有營養的","nutrition、nutrient",3.18,"低","Vegetables are cheap and **nutritious**.（自編例句）","蔬菜便宜又**有營養**。",20],[769,"beggar","n.",4,"乞丐","beg",3.17,"低","The kind woman gave some food to the **beggar**.（自編例句）","那位好心的婦人給了**乞丐**一些食物。",21],[770,"envision","v.",5,"想像；展望","vision",3.17,"低","She **envisions** a future where everyone has clean water.（自編例句）","她**想像**一個人人都有乾淨用水的未來。",21],[771,"chore","n.",5,"家事；雜務","",3.15,"低","Washing the dishes is my least favorite **chore**.（自編例句）","洗碗是我最討厭的**家事**。",21],[772,"furnish","v.",4,"配置家具；提供","furniture",3.14,"低","The apartment is fully **furnished**, so you don't need to buy a bed.（自編例句）","這間公寓**配**有全套**家具**，所以你不用買床。",21],[773,"sightseeing","n.",4,"觀光","",3.14,"低","We spent the whole day **sightseeing** in Tainan.（自編例句）","我們在臺南**觀光**了一整天。",21],[774,"disapprove","v.",5,"不贊成","approve",3.12,"低","My parents **disapprove** of my staying up late.（自編例句）","我爸媽**不贊成**我熬夜。",21],[775,"tangle","n./v.",5,"纏結；糾纏","",3.1,"低","My headphone cord always gets **tangled** in my bag.（自編例句）","我的耳機線放在包包裡總是**纏**在一起。",21],[776,"briefcase","n.",5,"公事包","",3.09,"低","The businessman carried a black leather **briefcase**.（自編例句）","那位商人提著一個黑色皮革**公事包**。",21],[777,"respondent","n.",5,"受訪者；回應者","respond",3.09,"低","About 60 percent of the **respondents** said they exercise every week.（自編例句）","約六成的**受訪者**表示他們每週都運動。",21],[778,"housework","n.",4,"家事","",3.08,"低","My brother and I share the **housework** on weekends.（自編例句）","週末我和哥哥分擔**家事**。",21],[779,"lifeguard","n.",4,"救生員","",3.07,"低","The **lifeguard** jumped into the pool to save the boy.（自編例句）","**救生員**跳進泳池救起那個男孩。",21],[780,"yawn","n./v.",4,"打呵欠","",3.07,"低","She couldn't stop **yawning** during the boring lecture.（自編例句）","在無聊的演講中，她忍不住一直**打呵欠**。",21],[781,"leisurely","adj./adv.",4,"悠閒的；從容的","leisure",3.05,"低","We took a **leisurely** walk along the river.（自編例句）","我們沿著河邊**悠閒**地散步。",21],[782,"shiver","n./v.",5,"發抖；顫抖","",3.05,"低","The children **shivered** in the cold wind.（自編例句）","孩子們在寒風中**發抖**。",21],[783,"smog","n.",5,"霧霾；空汙","",3.05,"低","On days with heavy **smog**, you should wear a mask outside.（自編例句）","**霧霾**嚴重的日子，外出應該戴口罩。",21],[784,"stingy","adj.",4,"小氣的","",3.03,"低","He is so **stingy** that he never buys anyone a drink.（自編例句）","他**小氣**到從來不請別人喝飲料。",21],[785,"twig","n.",4,"細枝；嫩枝","",3.03,"低","The bird used **twigs** to build its nest.（自編例句）","這隻鳥用**細枝**築巢。",21],[786,"consequent","adj.",4,"隨之發生的；因而產生的","consequence、consequently",3.02,"低","The heavy rain and the **consequent** flooding forced people to leave their homes.（自編例句）","大雨以及**隨之發生的**水災迫使居民撤離家園。",21],[787,"fluency","n.",5,"流利；流暢","fluent",3.02,"低","Reading aloud can improve your **fluency** in English.（自編例句）","大聲朗讀能提升你英文的**流利**度。",21],[788,"wither","v.",5,"枯萎；凋謝","",3.02,"低","The flowers **withered** because nobody watered them.（自編例句）","沒人澆水，花都**枯萎**了。",21],[789,"raisin","n.",4,"葡萄乾","",3.01,"低","My mother puts **raisins** in her bread.（自編例句）","我媽媽會在麵包裡加**葡萄乾**。",21],[790,"frustrate","v.",4,"使挫折；使沮喪","frustration",2.99,"低","It **frustrates** me when my computer runs slowly.（自編例句）","電腦跑得很慢時，讓我感到很**挫折**。",21],[791,"pessimism","n.",5,"悲觀","pessimistic",2.97,"低","There is a growing sense of **pessimism** about the economy.（自編例句）","人們對經濟的**悲觀**情緒日益加深。",21],[792,"murmur","n./v.",4,"低語；喃喃細語","",2.92,"低","I heard the **murmur** of voices in the next room.（自編例句）","我聽見隔壁房間傳來**低語**聲。",21],[793,"mumble","v./n.",5,"含糊地說；咕噥","",2.91,"低","He **mumbled** something, but I couldn't understand him.（自編例句）","他**含糊地說**了些什麼，但我聽不懂。",21],[794,"arouse","v.",5,"激起；喚起","",2.9,"低","The strange noise **aroused** my curiosity.（自編例句）","那奇怪的聲音**激起**了我的好奇心。",21],[795,"quiver","n./v.",5,"顫抖；箭袋","",2.84,"低","Her voice **quivered** as she told us the sad news.（自編例句）","她告訴我們這個壞消息時，聲音在**顫抖**。",21],[796,"drowsy","adj.",4,"昏昏欲睡的","",2.82,"低","This medicine may make you feel **drowsy**.（自編例句）","這種藥可能會讓你**昏昏欲睡**。",21],[797,"exclaim","v.",5,"驚呼；大聲說出","exclamation",2.82,"低","\"What a beautiful view!\" she **exclaimed**.（自編例句）","「好美的景色！」她**驚呼**道。",21],[798,"defensible","adj.",4,"站得住腳的；可防禦的","defend、defense",2.81,"低","His decision to cancel the trip was **defensible** because of the typhoon.（自編例句）","由於颱風來襲，他取消旅行的決定是**站得住腳的**。",21],[799,"overcoat","n.",4,"大衣","",2.77,"低","He put on his **overcoat** before going out into the snow.（自編例句）","他出門踏雪前穿上了**大衣**。",21],[800,"bridegroom","n.",4,"新郎","",2.76,"低","The **bridegroom** looked nervous before the wedding ceremony.（自編例句）","婚禮開始前，**新郎**看起來很緊張。",21],[801,"entitle","v.",5,"使有資格；給…命名","",2.71,"低","This ticket **entitles** you to one free drink.（自編例句）","這張票讓你**有資格**免費喝一杯飲料。",21],[802,"startle","v.",5,"使嚇一跳","",2.69,"低","The loud noise **startled** the baby.（自編例句）","巨大的聲響**嚇**了寶寶一**跳**。",21],[803,"hippopotamus","n.",4,"河馬","",2.56,"低","A **hippopotamus** spends most of the day in the water.（自編例句）","**河馬**一天中大部分時間都待在水裡。",21],[804,"acquaint","v.",5,"使熟悉；使認識","acquaintance",2.51,"低","Take some time to **acquaint** yourself with the new rules.（自編例句）","花點時間**熟悉**一下新規定。",21],[805,"earphone","n.",4,"耳機","",2.49,"低","Please use **earphones** when you listen to music on the bus.（自編例句）","在公車上聽音樂時請戴**耳機**。",21],[806,"waken","v.",4,"喚醒；醒來","",2.29,"低","The sound of the birds **wakened** me early in the morning.（自編例句）","鳥叫聲一大早就把我**喚醒**了。",21],[807,"geopolitical","adj.",0,"地緣政治的","politics、political",0,"高","Rising **geopolitical** tensions in East Asia have made many companies rethink where to build their factories.（自編例句）","東亞日益升高的**地緣政治**緊張情勢，讓許多企業重新考慮要把工廠設在哪裡。",9]];
+const strip2 = s => s.replace(/\*\*/g, '');
+const hl = s => String(s || '').replace(/\*\*(.+?)\*\*/g, '<strong class="hl">$1</strong>');
+const lvlLabel = l => l ? 'Level ' + l : '表外';
+const zf = z => z ? z.toFixed(2) : '—';
+const WORDS = RAW_WORDS.map(r => ({
+  rank: r[0],
+  word: r[1],
+  pos: r[2],
+  level: r[3],
+  zh: r[4],
+  family: r[5],
+  zipf: r[6],
+  priority: r[7],
+  sentenceHL: r[8],
+  sentence: strip2(r[8]),
+  sentenceZhHL: r[9],
+  sentenceZh: strip2(r[9]),
+  week: r[10]
+}));
+WORDS.forEach(w => { w.clozeOK = !!w.sentence && sentenceHasWord(w.sentence, w.word); });
+const TOTAL = WORDS.length;
+const MAX_ZIPF = Math.max(1, ...WORDS.map(w => w.zipf));
+const PAGE_SIZE = 60;
+let explorerLimit = PAGE_SIZE;
+
+// 只接受本字的屈折變化（複數、過去式、進行式、比較級），避免 diverse 對到 diversity 這類衍生字
+function isInflection(token, word) {
+  const t = token.toLowerCase(), w = word.toLowerCase();
+  if (t === w) return true;
+  const forms = [w + 's', w + 'es', w + 'ed', w + 'd', w + 'ing', w + 'er', w + 'est',
+    w + w.slice(-1) + 'ed', w + w.slice(-1) + 'ing'];
+  if (w.endsWith('e')) forms.push(w.slice(0, -1) + 'ing');
+  if (w.endsWith('y')) forms.push(w.slice(0, -1) + 'ies', w.slice(0, -1) + 'ied', w.slice(0, -1) + 'ier', w.slice(0, -1) + 'iest');
+  return forms.includes(t);
+}
+function wordRegex(word) {
+  return new RegExp('\\b' + word.slice(0, Math.min(3, word.length)) + '[a-zA-Z]*', 'gi');
+}
+function sentenceHasWord(sentence, word) {
+  return (sentence.match(wordRegex(word)) || []).some(tok => isInflection(tok, word));
+}
+
+let userStatus = JSON.parse(localStorage.getItem('gsat_c_status') || '{}');
+let explorerView = 'grid';
+let maskState = { zh: false, en: false };
+let fcDeck = [...WORDS];
+let fcIndex = 0;
+
+function saveStatus() {
+  localStorage.setItem('gsat_c_status', JSON.stringify(userStatus));
+  updateHeaderStats();
+}
+
+function updateHeaderStats() {
+  let m = 0, l = 0;
+  Object.values(userStatus).forEach(v => {
+    if (v === 'mastered') m++;
+    if (v === 'learning') l++;
+  });
+  document.getElementById('statMastered').textContent = `✅ 已熟記：${m} / ${TOTAL}`;
+  document.getElementById('statLearning').textContent = `📌 待加強：${l}`;
+}
+
+function populateWeekSelects() {
+  const selects = ['weekFilter', 'fcWeekFilter', 'quizScope'];
+  WEEKS_INFO.forEach(w => {
+    const opt1 = new Option(`${w.title} (${w.wordCount}字)`, w.week);
+    document.getElementById('weekFilter').add(opt1);
+    const opt2 = new Option(`${w.title} (${w.wordCount}字)`, w.week);
+    document.getElementById('fcWeekFilter').add(opt2);
+    const opt3 = new Option(`${w.title} (${w.wordCount}字)`, `week_${w.week}`);
+    document.getElementById('quizScope').add(opt3);
+  });
+}
+
+function speakText(text, lang = 'en-US', e) {
+  if (e) e.stopPropagation();
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const clean = text.replace(/____+/g, 'blank').replace(/（.*?）/g, '').replace(/\*\*/g, '');
+  const u = new SpeechSynthesisUtterance(clean);
+  u.lang = lang;
+  u.rate = 0.95;
+  window.speechSynthesis.speak(u);
+}
+
+function getCambridgeUrl(word) {
+  return 'https://dictionary.cambridge.org/zht/%E8%A9%9E%E5%85%B8/%E8%8B%B1%E8%AA%9E-%E6%BC%A2%E8%AA%9E-%E7%B9%81%E9%AB%94/' + encodeURIComponent(word);
+}
+
+function toggleWordStatus(word, status, e) {
+  if (e) e.stopPropagation();
+  if (userStatus[word] === status) {
+    delete userStatus[word];
+  } else {
+    userStatus[word] = status;
+  }
+  saveStatus();
+  renderExplorer();
+  renderSchedule();
+}
+
+function toggleMask(type) {
+  maskState[type] = !maskState[type];
+  document.getElementById('maskZhBtn').classList.toggle('active-toggle', maskState.zh);
+  document.getElementById('maskEnBtn').classList.toggle('active-toggle', maskState.en);
+  renderExplorer();
+}
+
+function setExplorerView(view) {
+  explorerView = view;
+  document.getElementById('viewGridBtn').classList.toggle('active-toggle', view === 'grid');
+  document.getElementById('viewTableBtn').classList.toggle('active-toggle', view === 'table');
+  renderExplorer();
+}
+
+function getFilteredWords() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const lvl = document.getElementById('levelFilter').value;
+  const pos = document.getElementById('posFilter').value;
+  const wk = document.getElementById('weekFilter').value;
+  const exam = document.getElementById('examFilter').value;
+  const st = document.getElementById('statusFilter').value;
+  const sort = document.getElementById('sortFilter').value;
+
+  let list = WORDS.filter(item => {
+    if (q && !(
+      item.word.toLowerCase().includes(q) ||
+      item.zh.toLowerCase().includes(q) ||
+      item.family.toLowerCase().includes(q) ||
+      item.sentence.toLowerCase().includes(q) ||
+      item.sentenceZh.toLowerCase().includes(q)
+    )) return false;
+    if (lvl !== 'all' && item.level !== Number(lvl)) return false;
+    if (pos !== 'all') {
+      if (pos === 'adv.') {
+        if (!item.pos.includes('adv.') && !item.pos.includes('prep.')) return false;
+      } else if (!item.pos.includes(pos)) return false;
+    }
+    if (wk !== 'all' && item.week !== Number(wk)) return false;
+    if (exam !== 'all' && item.priority !== exam) return false;
+    const curSt = userStatus[item.word] || 'unmarked';
+    if (st !== 'all' && curSt !== st) return false;
+    return true;
+  });
+
+  if (sort === 'rank') list.sort((a, b) => a.rank - b.rank);
+  else if (sort === 'alpha') list.sort((a, b) => a.word.localeCompare(b.word));
+  else if (sort === 'zipf') list.sort((a, b) => b.zipf - a.zipf || a.rank - b.rank);
+  else if (sort === 'level') list.sort((a, b) => a.level - b.level || a.rank - b.rank);
+
+  return list;
+}
+
+function resetExplorer() {
+  explorerLimit = PAGE_SIZE;
+  renderExplorer();
+}
+function showMoreWords() {
+  explorerLimit += PAGE_SIZE;
+  renderExplorer();
+}
+function moreButtonHtml(total) {
+  if (total <= explorerLimit) return '';
+  return `<div style="text-align:center; margin:20px 0;"><button class="btn btn-primary" onclick="showMoreWords()">⬇️ 再顯示 ${Math.min(PAGE_SIZE, total - explorerLimit)} 字（尚有 ${total - explorerLimit} 字）</button></div>`;
+}
+function renderExplorer() {
+  const fullList = getFilteredWords();
+  const list = fullList.slice(0, explorerLimit);
+  document.getElementById('resultCount').textContent = `符合 ${fullList.length} / ${TOTAL} 個單字（目前顯示 ${list.length}）`;
+  const container = document.getElementById('explorerContainer');
+
+    if (fullList.length === 0) {
+    container.innerHTML = `<div class="panel-card" style="text-align:center; padding:40px; color:var(--text-muted);">找不到符合篩選條件的單字，請嘗試放寬篩選條件。</div>`;
+    return;
+  }
+
+  if (explorerView === 'grid') {
+    container.innerHTML = `<div class="word-grid">` + list.map(item => {
+      const st = userStatus[item.word] || '';
+      const camUrl = getCambridgeUrl(item.word);
+      return `
+      <div class="word-card ${st ? 'status-' + st : ''}">
+        <div class="card-top">
+          <div class="badges-left">
+            <span class="badge rank">#${item.rank}</span>
+            <span class="badge lvl-${item.level}">${lvlLabel(item.level)}</span>
+            <span class="badge">第 ${item.week} 週</span>
+          </div>
+          <div class="badges-right">
+            <span class="badge score">優先度 ${item.priority}</span>
+          </div>
+        </div>
+        <div class="word-head">
+          <div>
+            <span class="word-title ${maskState.en ? 'masked-text' : ''}" onclick="this.classList.toggle('revealed')">${item.word}</span>
+            <span class="word-pos">${item.pos}</span>
+          </div>
+          <div class="audio-links">
+            <button class="btn btn-xs" onclick="speakText('${item.word}', 'en-US', event)" title="美式發音">🔊 US</button>
+            <button class="btn btn-xs" onclick="speakText('${item.word}', 'en-GB', event)" title="英式發音">🔊 UK</button>
+            <a class="btn btn-xs" href="${camUrl}" target="_blank" rel="noopener noreferrer" title="查詢劍橋字典">📖 劍橋</a>
+          </div>
+        </div>
+        <div class="word-zh ${maskState.zh ? 'masked-text' : ''}" onclick="this.classList.toggle('revealed')">${item.zh}</div>
+        ${item.family ? `<div class="word-family">🌿 同字族：${item.family}</div>` : ''}
+        <div class="freq-bar">
+          <div class="freq-item">日常頻率 Zipf<span>${zf(item.zipf)}</span></div>
+          <div class="freq-item">建議優先度<span>${item.priority}</span></div>
+          <div class="freq-item">參考詞彙表<span>${lvlLabel(item.level)}</span></div>
+        </div>
+        <div class="sentence-box">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px;">
+            <span>${hl(item.sentenceHL)}</span>
+            <button class="btn btn-xs" onclick="speakText(${JSON.stringify(item.sentence).replace(/"/g, '&quot;')}, 'en-US', event)" title="朗讀例句">🔈</button>
+          </div>
+        </div>
+        <div class="sentence-zh">${hl(item.sentenceZhHL)}</div>
+        <div class="card-actions">
+          <button class="btn btn-learning ${st === 'learning' ? 'active' : ''}" onclick="toggleWordStatus('${item.word}', 'learning', event)">📌 待加強</button>
+          <button class="btn btn-mastered ${st === 'mastered' ? 'active' : ''}" onclick="toggleWordStatus('${item.word}', 'mastered', event)">✅ 已熟記</button>
+        </div>
+      </div>`;
+        }).join('') + `</div>` + moreButtonHtml(fullList.length);
+  } else {
+    container.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>單字</th>
+              <th>詞性</th>
+              <th>級別</th>
+              <th>常考中文義</th>
+              <th>週次</th>
+              <th>日常頻率</th>
+              <th>優先度</th>
+              <th>發音 / 字典</th>
+              <th>標記</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${list.map(item => {
+              const st = userStatus[item.word] || '';
+              return `<tr onclick="openWordModal('${item.word}')" style="cursor:pointer;">
+                <td><strong>#${item.rank}</strong></td>
+                <td><strong class="${maskState.en ? 'masked-text' : ''}">${item.word}</strong></td>
+                <td>${item.pos}</td>
+                <td><span class="badge lvl-${item.level}">${item.level ? "L" + item.level : "表外"}</span></td>
+                <td class="${maskState.zh ? 'masked-text' : ''}">${item.zh}</td>
+                <td>W${item.week}</td>
+                <td>${zf(item.zipf)}</td>
+                <td><strong>${item.priority}</strong></td>
+                <td onclick="event.stopPropagation()">
+                  <button class="btn btn-xs" onclick="speakText('${item.word}', 'en-US', event)">🔊</button>
+                  <a class="btn btn-xs" href="${getCambridgeUrl(item.word)}" target="_blank" rel="noopener">📖</a>
+                </td>
+                <td onclick="event.stopPropagation()">
+                  <button class="btn btn-xs btn-learning ${st === 'learning' ? 'active' : ''}" onclick="toggleWordStatus('${item.word}', 'learning', event)">📌</button>
+                  <button class="btn btn-xs btn-mastered ${st === 'mastered' ? 'active' : ''}" onclick="toggleWordStatus('${item.word}', 'mastered', event)">✅</button>
+                </td>
+              </tr>`;
+            }).join('')}
+                    </tbody>
+        </table>
+      </div>` + moreButtonHtml(fullList.length);
+  }
+}
+
+/* FLASHCARDS */
+function initFlashcards() {
+  const wk = document.getElementById('fcWeekFilter').value;
+  const st = document.getElementById('fcStatusFilter').value;
+  fcDeck = WORDS.filter(item => {
+    if (wk !== 'all' && item.week !== Number(wk)) return false;
+    const curSt = userStatus[item.word] || 'unmarked';
+    if (st !== 'all' && curSt !== st) return false;
+    return true;
+  });
+  fcIndex = 0;
+  renderFlashcard();
+}
+
+function shuffleFlashcards() {
+  for (let i = fcDeck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [fcDeck[i], fcDeck[j]] = [fcDeck[j], fcDeck[i]];
+  }
+  fcIndex = 0;
+  renderFlashcard();
+}
+
+function renderFlashcard() {
+  const cardEl = document.getElementById('fcCard');
+  cardEl.classList.remove('flipped');
+  if (fcDeck.length === 0) {
+    document.getElementById('fcCounter').textContent = '0 / 0 張';
+    document.getElementById('fcFront').innerHTML = `<p>目前篩選範圍內沒有單字。</p>`;
+    document.getElementById('fcBack').innerHTML = `<p>請調整上方篩選條件。</p>`;
+    return;
+  }
+  const item = fcDeck[fcIndex];
+  const st = userStatus[item.word] || '';
+  document.getElementById('fcCounter').textContent = `第 ${fcIndex + 1} / ${fcDeck.length} 張 ${st === 'mastered' ? '（✅ 已熟記）' : st === 'learning' ? '（📌 待加強）' : ''}`;
+  document.getElementById('fcFront').innerHTML = `
+    <div style="display:flex; gap:8px;">
+      <span class="badge rank">#${item.rank}</span>
+      <span class="badge lvl-${item.level}">${lvlLabel(item.level)}</span>
+      <span class="badge">第 ${item.week} 週</span>
+    </div>
+    <div class="fc-word">${item.word}</div>
+    <div class="word-pos" style="font-size:1.15rem;">${item.pos}</div>
+    <div style="font-size:0.85rem; color:var(--text-muted); margin-top:12px;">👆 點擊卡片或按空白鍵翻面看中文與例句</div>
+  `;
+  document.getElementById('fcBack').innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <strong style="font-size:1.5rem;">${item.word}</strong> <span class="word-pos">${item.pos}</span>
+      </div>
+      <a class="btn btn-xs" href="${getCambridgeUrl(item.word)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📖 劍橋字典</a>
+    </div>
+    <div class="word-zh" style="font-size:1.35rem;">${item.zh}</div>
+    ${item.family ? `<div class="word-family">🌿 同字族：${item.family}</div>` : ''}
+    <div class="sentence-box">${hl(item.sentenceHL)}</div>
+    <div class="sentence-zh">${hl(item.sentenceZhHL)}</div>
+    <div class="sources-text">日常頻率 ${zf(item.zipf)}｜建議優先度 ${item.priority}</div>
+  `;
+}
+
+function flipCard() {
+  document.getElementById('fcCard').classList.toggle('flipped');
+}
+function prevCard() {
+  if (!fcDeck.length) return;
+  fcIndex = (fcIndex - 1 + fcDeck.length) % fcDeck.length;
+  renderFlashcard();
+}
+function nextCard() {
+  if (!fcDeck.length) return;
+  fcIndex = (fcIndex + 1) % fcDeck.length;
+  renderFlashcard();
+}
+function speakCurrentCard(lang) {
+  if (!fcDeck.length) return;
+  speakText(fcDeck[fcIndex].word, lang);
+}
+function markCurrentCard(status) {
+  if (!fcDeck.length) return;
+  toggleWordStatus(fcDeck[fcIndex].word, status);
+  renderFlashcard();
+}
+
+/* QUIZ ARENA */
+let quizState = { questions: [], idx: 0, score: 0, wrongWords: [] };
+
+function startQuiz() {
+  const type = document.getElementById('quizType').value;
+  const scope = document.getElementById('quizScope').value;
+  const count = Number(document.getElementById('quizCount').value);
+
+    let pool = [...WORDS];
+  if (scope === 'priority') {
+    pool = WORDS.filter(w => w.priority === '高');
+  } else if (scope === 'learning') {
+    pool = WORDS.filter(w => userStatus[w.word] === 'learning');
+  } else if (scope.startsWith('week_')) {
+    const wk = Number(scope.split('_')[1]);
+    pool = WORDS.filter(w => w.week === wk);
+  }
+
+    if (type === 'cloze') pool = pool.filter(w => w.clozeOK);
+  if (pool.length < 4) {
+    document.getElementById('quizPlayArea').innerHTML = `<p style="color:var(--danger); font-weight:600;">所選範圍單字少於 4 個，無法產生四選一測驗，請先標記更多「待加強」單字或切換範圍！</p>`;
+    return;
+  }
+
+  const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, Math.min(count, pool.length));
+  quizState = {
+    type,
+    questions: shuffled.map(target => {
+            // 干擾選項優先取同詞性、同級別附近的字，降低靠詞性猜答的機會
+      const samePos = WORDS.filter(w => w.word !== target.word && w.zh !== target.zh && w.pos.split('/')[0] === target.pos.split('/')[0]);
+      const base = samePos.length >= 3 ? samePos : WORDS.filter(w => w.word !== target.word && w.zh !== target.zh);
+      const distractors = [...base].sort(() => Math.random() - 0.5).slice(0, 3);
+      const options = [target, ...distractors].sort(() => Math.random() - 0.5);
+      return { target, options };
+    }),
+    idx: 0,
+    score: 0,
+    wrongWords: []
+  };
+  renderQuizQuestion();
+}
+
+function maskWordInSentence(sentence, word) {
+    return sentence.replace(wordRegex(word), tok => isInflection(tok, word) ? '______' : tok);
+}
+
+function renderQuizQuestion() {
+  const area = document.getElementById('quizPlayArea');
+  if (quizState.idx >= quizState.questions.length) {
+    const total = quizState.questions.length;
+    const acc = Math.round((quizState.score / total) * 100);
+    area.innerHTML = `
+      <div style="text-align:center; padding:20px 0;">
+        <h2 style="font-size:1.8rem; margin-bottom:8px;">🎉 測驗完成！得分：${quizState.score} / ${total} (${acc}%)</h2>
+        ${quizState.wrongWords.length > 0 ? `
+          <p style="color:var(--text-muted); margin-bottom:14px;">本次答錯單字共 ${quizState.wrongWords.length} 字：${quizState.wrongWords.map(w => w.word).join(', ')}</p>
+          <button class="btn btn-learning" onclick="batchMarkWrong()">📌 將答錯單字全部加入「待加強」</button>
+        ` : `<p style="color:var(--success); font-weight:700;">太神啦！全對滿分通過！</p>`}
+        <div style="margin-top:16px;">
+          <button class="btn btn-primary" onclick="startQuiz()">🔄 再測驗一次</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const q = quizState.questions[quizState.idx];
+  const t = q.target;
+  let promptHtml = '';
+  if (quizState.type === 'en2zh') {
+    promptHtml = `${t.word} <span class="word-pos">${t.pos}</span> <button class="btn btn-xs" onclick="speakText('${t.word}','en-US')">🔊</button>`;
+  } else if (quizState.type === 'zh2en') {
+    promptHtml = `${t.zh} <span class="badge">詞性：${t.pos}｜${lvlLabel(t.level)}</span>`;
+  } else {
+    promptHtml = `
+      <div style="font-size:1.05rem; line-height:1.6;">${maskWordInSentence(t.sentence, t.word)}</div>
+      <div style="font-size:0.85rem; color:var(--primary); margin-top:8px;">💡 提示詞義：${t.zh} (${t.pos})</div>
+    `;
+  }
+
+  area.innerHTML = `
+    <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.9rem;">
+      <span>題目 ${quizState.idx + 1} / ${quizState.questions.length}</span>
+      <span>目前答對：${quizState.score}</span>
+    </div>
+    <div class="quiz-question">${promptHtml}</div>
+    <div class="quiz-options">
+      ${q.options.map((opt, idx) => `
+        <button class="quiz-opt" id="qopt-${idx}" onclick="answerQuiz(${idx})">
+          ${quizState.type === 'en2zh' ? opt.zh : opt.word}
+        </button>
+      `).join('')}
+    </div>
+    <div id="quizFeedback"></div>
+  `;
+}
+
+function answerQuiz(selectedIdx) {
+  const q = quizState.questions[quizState.idx];
+  const isCorrect = q.options[selectedIdx].word === q.target.word;
+  if (isCorrect) quizState.score++;
+  else quizState.wrongWords.push(q.target);
+
+  q.options.forEach((opt, idx) => {
+    const btn = document.getElementById(`qopt-${idx}`);
+    btn.disabled = true;
+    if (opt.word === q.target.word) btn.classList.add('correct');
+    else if (idx === selectedIdx) btn.classList.add('wrong');
+  });
+
+  speakText(q.target.word, 'en-US');
+
+  document.getElementById('quizFeedback').innerHTML = `
+    <div class="sentence-box" style="margin-bottom:12px;">
+      <strong>${isCorrect ? '✅ 答對了！' : '❌ 答錯了！'} 正解：${q.target.word} (${q.target.pos}) ${q.target.zh}</strong><br>
+      <span>例句：${hl(q.target.sentenceHL)}</span><br><span class="sentence-zh">${hl(q.target.sentenceZhHL)}</span>
+    </div>
+    <button class="btn btn-primary" onclick="quizState.idx++; renderQuizQuestion();">下一題 ➡️</button>
+  `;
+}
+
+function batchMarkWrong() {
+  quizState.wrongWords.forEach(w => { userStatus[w.word] = 'learning'; });
+  saveStatus();
+  renderExplorer();
+  renderSchedule();
+  alert('已將答錯單字全部加入「📌 待加強」！');
+}
+
+/* 12-WEEK SCHEDULE */
+function renderSchedule() {
+  const grid = document.getElementById('scheduleGrid');
+  grid.innerHTML = WEEKS_INFO.map(w => {
+    const weekWords = WORDS.filter(item => item.week === w.week);
+    const masteredCount = weekWords.filter(item => userStatus[item.word] === 'mastered').length;
+    const pct = Math.round((masteredCount / weekWords.length) * 100);
+    return `
+      <div class="week-card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="font-size:1.15rem;">${w.title}（${w.wordCount} 字｜${w.mix}）</h3>
+          <span class="badge rank">複習：${w.review}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted);">
+          <span>單字熟記進度：${masteredCount} / ${weekWords.length}</span>
+          <span>${pct}%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <div>
+          <div style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">🔤 本週 C 級補強單字（點擊查看詳情）：</div>
+          <div class="chip-list">
+            ${weekWords.map(item => `
+              <span class="word-chip ${userStatus[item.word] || ''}" onclick="openWordModal('${item.word}')">
+                ${item.word}
+              </span>
+            `).join('')}
+          </div>
+        </div>
+        
+        <div style="display:flex; gap:8px; margin-top:auto;">
+          <button class="btn btn-xs" onclick="jumpToWeekFlashcards(${w.week})">🗂️ 本週字卡</button>
+          <button class="btn btn-xs" onclick="jumpToWeekQuiz(${w.week})">✍️ 本週測驗</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function jumpToWeekFlashcards(wk) {
+  document.getElementById('fcWeekFilter').value = String(wk);
+  initFlashcards();
+  switchTab('flashcards', document.querySelectorAll('.tab-btn')[1]);
+}
+
+function jumpToWeekQuiz(wk) {
+  document.getElementById('quizScope').value = `week_${wk}`;
+  startQuiz();
+  switchTab('quiz', document.querySelectorAll('.tab-btn')[2]);
+}
+
+/* ANALYTICS */
+function renderAnalytics() {
+  const topZipf = [...WORDS].filter(w => w.zipf > 0).sort((a, b) => b.zipf - a.zipf).slice(0, 15);
+  const count = (fn) => WORDS.filter(fn).length;
+  const bar = (label, cnt, color) => `
+        <div class="bar-row">
+          <span class="bar-label">${label}</span>
+          <div class="bar-track"><div class="bar-fill" style="background:${color}; width:${Math.round(cnt/TOTAL*100)}%"></div></div>
+          <span class="bar-val">${cnt} 字 (${(cnt/TOTAL*100).toFixed(1)}%)</span>
+        </div>`;
+  const pri = ['高', '中', '低'].map(p => ['優先度「' + p + '」', count(w => w.priority === p)]);
+  const tiers = [
+    ['Zipf 4.5 以上（非常常見）', w => w.zipf >= 4.5],
+    ['Zipf 4.0–4.49', w => w.zipf >= 4 && w.zipf < 4.5],
+    ['Zipf 3.5–3.99', w => w.zipf >= 3.5 && w.zipf < 4],
+    ['Zipf 3.5 以下', w => w.zipf > 0 && w.zipf < 3.5]
+  ].map(([label, fn]) => [label, count(fn)]);
+  const levelCounts = {};
+  WORDS.forEach(w => { levelCounts[w.level] = (levelCounts[w.level] || 0) + 1; });
+
+  document.getElementById('analyticsGrid').innerHTML = `
+    <div class="panel-card">
+      <h3 style="margin-bottom:12px;">🏆 日常最常見 Top 15（依 Zipf 頻率）</h3>
+      ${topZipf.map(w => `
+        <div class="bar-row" onclick="openWordModal('${w.word}')" style="cursor:pointer;">
+          <span class="bar-label">#${w.rank} ${w.word}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(w.zipf/MAX_ZIPF*100)}%"></div></div>
+          <span class="bar-val">Zipf ${zf(w.zipf)}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="panel-card">
+      <h3 style="margin-bottom:12px;">⭐ 建議優先度分布</h3>
+      ${pri.map(([label, cnt]) => bar(label, cnt, 'var(--danger)')).join('')}
+      <h3 style="margin:24px 0 12px;">📈 日常使用頻率分層</h3>
+      ${tiers.map(([label, cnt]) => bar(label, cnt, 'var(--warning)')).join('')}
+      <h3 style="margin:24px 0 12px;">📊 大考中心參考詞彙表級別分布</h3>
+      ${Object.entries(levelCounts).sort((a, b) => (+a[0] || 99) - (+b[0] || 99)).map(([lvl, cnt]) => bar(lvl === '0' ? '詞彙表外（編者補充）' : 'Level ' + lvl, cnt, 'var(--success)')).join('')}
+    </div>
+  `;
+}
+
+/* MODAL */
+function openWordModal(wordStr) {
+  const item = WORDS.find(w => w.word === wordStr);
+  if (!item) return;
+  const st = userStatus[item.word] || '';
+  document.getElementById('wordModalContent').innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div style="display:flex; gap:8px;">
+        <span class="badge rank">排名 #${item.rank}</span>
+        <span class="badge lvl-${item.level}">${lvlLabel(item.level)}</span>
+        <span class="badge">第 ${item.week} 週</span>
+        <span class="badge score">優先度 ${item.priority}</span>
+      </div>
+      <button class="btn btn-xs" onclick="closeModal()">✖ 關閉</button>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
+      <div>
+        <span style="font-size:2rem; font-weight:800;">${item.word}</span>
+        <span class="word-pos" style="font-size:1.1rem;">${item.pos}</span>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button class="btn btn-xs" onclick="speakText('${item.word}', 'en-US')">🔊 US</button>
+        <button class="btn btn-xs" onclick="speakText('${item.word}', 'en-GB')">🔊 UK</button>
+        <a class="btn btn-xs" href="${getCambridgeUrl(item.word)}" target="_blank" rel="noopener">📖 劍橋字典</a>
+      </div>
+    </div>
+    <div class="word-zh" style="font-size:1.35rem; margin-bottom:10px;">${item.zh}</div>
+    ${item.family ? `<div class="word-family" style="margin-bottom:10px;">🌿 同字族：${item.family}</div>` : ''}
+    <div class="freq-bar" style="margin-bottom:12px;">
+          <div class="freq-item">日常頻率 Zipf<span>${zf(item.zipf)}</span></div>
+          <div class="freq-item">建議優先度<span>${item.priority}</span></div>
+          <div class="freq-item">參考詞彙表<span>${lvlLabel(item.level)}</span></div>
+        </div>
+    <div class="sentence-box" style="margin-bottom:10px;">
+      ${hl(item.sentenceHL)}
+      <button class="btn btn-xs" style="margin-left:6px;" onclick="speakText(${JSON.stringify(item.sentence).replace(/"/g, '&quot;')}, 'en-US')">🔈 朗讀</button>
+    </div>
+    <div class="sentence-zh" style="margin-bottom:16px;">${hl(item.sentenceZhHL)}</div>
+    <div class="card-actions">
+      <button class="btn btn-learning ${st === 'learning' ? 'active' : ''}" onclick="toggleWordStatus('${item.word}', 'learning'); openWordModal('${item.word}');">📌 待加強</button>
+      <button class="btn btn-mastered ${st === 'mastered' ? 'active' : ''}" onclick="toggleWordStatus('${item.word}', 'mastered'); openWordModal('${item.word}');">✅ 已熟記</button>
+    </div>
+  `;
+  document.getElementById('wordModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('wordModal').classList.remove('open');
+}
+
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeBtn').textContent = isDark ? '🌙 深色模式' : '☀️ 淺色模式';
+}
+
+function exportProgress() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(userStatus, null, 2));
+  const a = document.createElement('a');
+  a.href = dataStr;
+  a.download = "學測C級補強單字_學習進度備份.json";
+  a.click();
+}
+
+function importProgress(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try { data = JSON.parse(reader.result); }
+    catch (err) { alert('匯入失敗：這個檔案不是有效的進度備份（JSON 格式錯誤）。'); return; }
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      alert('匯入失敗：檔案內容不是單字進度紀錄。'); return;
+    }
+    const valid = new Set(WORDS.map(w => w.word));
+    const clean = {};
+    let m = 0, l = 0, skipped = 0;
+    for (const [k, v] of Object.entries(data)) {
+      if (valid.has(k) && (v === 'mastered' || v === 'learning')) {
+        clean[k] = v; v === 'mastered' ? m++ : l++;
+      } else skipped++;
+    }
+    if (m + l === 0) {
+      alert('匯入失敗：檔案裡沒有本頁（C 級）的單字紀錄。請確認選的是「C 級」的備份檔，不是另一級的。'); return;
+    }
+    const msg = '備份檔內有：已熟記 ' + m + ' 字、待加強 ' + l + ' 字' +
+      (skipped ? '（另有 ' + skipped + ' 筆不屬於本頁，將略過）' : '') +
+      '。\n\n匯入後會取代目前這台裝置上的標記紀錄，確定要匯入嗎？';
+    if (!confirm(msg)) return;
+    userStatus = clean;
+    saveStatus();
+    renderExplorer();
+    renderSchedule();
+    renderFlashcard();
+    alert('匯入完成：已熟記 ' + m + ' 字、待加強 ' + l + ' 字。');
+  };
+  reader.onerror = () => alert('匯入失敗：無法讀取這個檔案。');
+  reader.readAsText(file, 'utf-8');
+}
+
+/* ===== Print module ===== */
+const PR = { level: 'C 級', code: 'C', weeks: WEEKS_INFO.length };
+const PR_PER = { cards: 8, list: 36 };
+function prEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function prOpt(name) { const el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : null; }
+function prInit() {
+  const sel = document.getElementById('prWeek');
+  if (!sel || sel.options.length) return;
+  for (let w = 1; w <= PR.weeks; w++) {
+    const n = WORDS.filter(x => x.week === w).length;
+    sel.insertAdjacentHTML('beforeend', '<option value="' + w + '">' + w + '（' + n + ' 字）</option>');
+  }
+  document.getElementById('prTo').max = WORDS.length;
+  document.getElementById('prFrom').max = WORDS.length;
+}
+function prSelected() {
+  const range = prOpt('prRange');
+  let list;
+  if (range === 'week') {
+    const w = +document.getElementById('prWeek').value || 1;
+    list = WORDS.filter(x => x.week === w);
+  } else if (range === 'learning') {
+    list = WORDS.filter(x => userStatus[x.word] === 'learning');
+  } else {
+    let a = parseInt(document.getElementById('prFrom').value, 10) || 1;
+    let b = parseInt(document.getElementById('prTo').value, 10) || a;
+    if (a > b) [a, b] = [b, a];
+    list = WORDS.filter(x => x.rank >= a && x.rank <= b);
+  }
+  if (range !== 'learning' && document.getElementById('prSkipMastered').checked) {
+    list = list.filter(x => userStatus[x.word] !== 'mastered');
+  }
+  return list.slice().sort((p, q) => p.rank - q.rank);
+}
+function prWordSize(w) {
+  const n = w.length;
+  return n <= 7 ? 24 : n <= 9 ? 21 : n <= 11 ? 18 : n <= 13 ? 15.5 : 13.5;
+}
+function prCard(x) {
+  const tag = PR.code + '・第' + x.week + '週・#' + String(x.rank).padStart(4, '0');
+  const mark = userStatus[x.word] === 'learning' ? '<span class="pr-mark">待加強</span>' : '';
+  const fam = x.family ? '<div class="pr-fam">' + prEsc(x.family).replace(/＊/g, '') + '</div>' : '';
+  return '<div class="pr-card">' +
+    '<div class="pr-half"><div class="pr-word" style="font-size:' + prWordSize(x.word) + 'pt">' + prEsc(x.word) + '</div>' +
+      '<div class="pr-pos">' + prEsc(x.pos) + '　' + (x.level ? 'Lv.' + x.level : '表外') + '</div><span class="pr-tag">' + tag + '</span></div>' +
+    '<div class="pr-half">' + mark + '<div class="pr-zh"' + (x.zh.length > 6 ? ' style="font-size:' + (x.zh.length > 10 ? 10.5 : 12) + 'pt"' : '') + '>' + prEsc(x.zh) + '</div>' + fam + '</div>' +
+  '</div>';
+}
+function prSheets(list, fmt) {
+  const per = PR_PER[fmt], pages = [], total = Math.ceil(list.length / per);
+  const blank = document.getElementById('prListMode').value === 'blank';
+  const title = '學測英文 ' + PR.level + ' 單字';
+  for (let i = 0; i < total; i++) {
+    const chunk = list.slice(i * per, i * per + per);
+    let body;
+    if (fmt === 'cards') {
+      body = '<div class="pr-cards">' + chunk.map(prCard).join('') + '</div>';
+    } else {
+      body = '<div class="pr-list-head"><h3>' + title + '　自我測驗單字表</h3><span>' + (blank ? '在中文欄寫下意思，寫完回網頁對答案；答對的打勾' : '沿虛線往後折，遮住中文後自我測驗；會的打勾') + '</span></div>' +
+        '<table class="pr-list"><thead><tr><th class="c-no">排名</th><th class="c-word">單字</th><th class="c-pos">詞性</th><th class="c-zh">中文</th><th class="c-chk">✓</th></tr></thead><tbody>' +
+        chunk.map(x => '<tr><td class="c-no">' + x.rank + '</td><td class="c-word">' + prEsc(x.word) + '</td><td class="c-pos">' + prEsc(x.pos) + '</td>' +
+          '<td class="c-zh' + (blank ? ' blank' : '') + '">' + prEsc(x.zh) + '</td><td class="c-chk">□</td></tr>').join('') +
+        '</tbody></table>';
+    }
+    pages.push('<div class="pr-sheet">' + body + '<div class="pr-foot"><span>' + title + '</span><span>' + (i + 1) + ' / ' + total + '</span></div></div>');
+  }
+  return pages;
+}
+function prFit() {
+  const box = document.getElementById('prPreview');
+  if (!box) return;
+  const avail = box.clientWidth - 32, paper = 210 * 96 / 25.4;
+  const z = Math.min(1, avail / paper);
+  box.querySelectorAll('.pr-sheet').forEach(s => { s.style.zoom = z; });
+}
+function prRender() {
+  prInit();
+  const range = prOpt('prRange'), fmt = prOpt('prFormat');
+  document.getElementById('prSubWeek').style.display = range === 'week' ? '' : 'none';
+  document.getElementById('prSubRank').style.display = range === 'rank' ? '' : 'none';
+  document.getElementById('prSkipWrap').style.display = range === 'learning' ? 'none' : '';
+  document.getElementById('prSubList').style.display = fmt === 'list' ? '' : 'none';
+  document.getElementById('prTips').innerHTML = (fmt === 'cards'
+      ? '<b>怎麼用：</b>單面列印，沿外圍虛線剪下，再沿中間點線對折，一面英文、一面中文。卡片角落有「級別・週次・排名」，散掉時可以照號碼排回去。'
+      : '<b>怎麼用：</b>沿詞性右側的虛線把紙往後折，就能遮住中文自我測驗。會的字在右邊打勾，沒打勾的回網頁標成「待加強」。') +
+    '<br><b>列印設定：</b>縮放請選「實際大小」或「100%」，不要選「符合頁面大小」，否則卡片尺寸會跑掉。建議用電腦列印；想先存檔，可在列印視窗的目的地選「另存為 PDF」。';
+  const list = prSelected(), box = document.getElementById('prPreview'), btn = document.getElementById('prPrintBtn');
+  if (!list.length) {
+    document.getElementById('prCount').textContent = '目前沒有符合條件的字';
+    box.innerHTML = '<div class="pr-empty">' + (range === 'learning'
+      ? '還沒有標記「待加強」的字。到「單字探索總覽」或「翻轉單字卡」把不熟的字標成 📌 待加強，再回來列印。'
+      : '這個範圍沒有字，請調整條件。') + '</div>';
+    btn.disabled = true; btn.style.opacity = .5; return;
+  }
+  btn.disabled = false; btn.style.opacity = '';
+  const pages = prSheets(list, fmt);
+  document.getElementById('prCount').textContent = '共 ' + list.length + ' 字，需要 ' + pages.length + ' 張 A4（單面）';
+  const show = 2;
+  box.innerHTML = pages.slice(0, show).join('') + (pages.length > show ? '<p class="pr-more">預覽只顯示前 ' + show + ' 頁，列印時會印出全部 ' + pages.length + ' 頁。</p>' : '');
+  prFit();
+}
+function prFill() {
+  const list = prSelected();
+  if (!list.length) return false;
+  document.getElementById('printRoot').innerHTML = prSheets(list, prOpt('prFormat')).join('');
+  document.documentElement.classList.add('pr-printing');
+  return true;
+}
+function prPrint() { if (prFill()) window.print(); }
+window.addEventListener('beforeprint', () => {
+  const tab = document.getElementById('tab-print');
+  if (tab && tab.classList.contains('active') && !document.documentElement.classList.contains('pr-printing')) prFill();
+});
+window.addEventListener('afterprint', () => {
+  document.documentElement.classList.remove('pr-printing');
+  document.getElementById('printRoot').innerHTML = '';
+});
+window.addEventListener('resize', prFit);
+
+function resetProgress() {
+  if (confirm('確定要清空所有「已熟記／待加強」標記紀錄嗎？')) {
+    userStatus = {};
+    saveStatus();
+        renderExplorer();
+    renderSchedule();
+    renderFlashcard();
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('tab-flashcards').classList.contains('active')) return;
+  if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if (e.code === 'Space') { e.preventDefault(); flipCard(); }
+  else if (e.code === 'ArrowRight') nextCard();
+  else if (e.code === 'ArrowLeft') prevCard();
+  else if (e.key === '1') markCurrentCard('learning');
+  else if (e.key === '2') markCurrentCard('mastered');
+  else if (e.key.toLowerCase() === 's') speakCurrentCard('en-US');
+});
+
+function applyCounts() {
+  const nW = WEEKS_INFO.length;
+  document.title = `學測英文 C 級補強單字（${TOTAL}字）互動學習系統 v1.0`;
+  document.querySelectorAll('.n-total').forEach(e => { e.textContent = TOTAL; });
+  document.querySelectorAll('.n-weeks').forEach(e => { e.textContent = nW; });
+  const lv = {};
+  WORDS.forEach(w => { lv[w.level] = (lv[w.level] || 0) + 1; });
+  const sel = document.getElementById('levelFilter');
+  sel.options[0].textContent = `全部級別 (${TOTAL})`;
+  Object.keys(lv).map(Number).sort((a, b) => (a || 99) - (b || 99)).forEach(l => {
+    sel.add(new Option(`${l ? 'Level ' + l : '詞彙表外（編者補充）'} (${lv[l]}字)`, l));
+  });
+  const sizes = WEEKS_INFO.map(w => w.wordCount);
+  const hi = WORDS.filter(w => w.priority === '高').length;
+  document.getElementById('scheduleIntro').textContent =
+    `C 級 ${TOTAL} 字依「建議優先度」由高到低分配，共 ${nW} 週、每週 ${Math.min(...sizes)}–${Math.max(...sizes)} 字；` +
+    `前面幾週先安排優先度「高」的 ${hi} 字，時間不夠時先背前段最划算。` +
+    `複習原則：每週複習前一週，並間隔 3 週回頭複習一次（間隔重複法）。點擊單字可直接檢視詳情與例句。`;
+  document.getElementById('resultCount').textContent = `顯示 ${TOTAL} 個單字`;
+}
+
+populateWeekSelects();
+applyCounts();
+updateHeaderStats();
+renderExplorer();
+initFlashcards();
+startQuiz();
+renderSchedule();
+renderAnalytics();
+</script>
+</body>
+</html>
